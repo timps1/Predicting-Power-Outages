@@ -6,7 +6,7 @@ def getInputData():
     This function is designed to be called from the command line.
     """
     if len(sys.argv) < 2:
-        print("Usage: python MainPowerOutagePrediction.py <data_file_path>")
+        print("Usage: python MainPowerOutagePrediction.py <data_file_path> ...")
         sys.exit(1)
     
     # Data Location

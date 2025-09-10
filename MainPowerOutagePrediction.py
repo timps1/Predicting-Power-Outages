@@ -1,10 +1,9 @@
 import sys
-import Models
-import IO_Data as IOData
-import Model_Evaluation as ModelEvaluation
-import Data_Preprocessing as DataPreprocessing
-import Display
-
+from Models import KNNModel, SVMModel, XGBoostModel
+from IO_Data import IOData, IOModels
+from Model_Evaluation import CrossValidation
+from Data_Preprocessing import NormaliseData
+from Display import Graphing
 
 def main():
     """
@@ -17,16 +16,18 @@ def main():
     # Normalize/Preprocess data --- If normalization is needed
     print("Preprocess data...")
     methodLabel='zero_to_one'
-    normalizer = DataPreprocessing.DataNormalizer()
+    normalizer = NormaliseData.DataNormalizer()
     normalizer.normalizeDataByColumn(data, methodLabel)
     
     # Save normalized data
     IOData.SaveInputData(data, 'normalized_data.csv')
 
     # Initialize model
-    modelSVM = Models.SVM()
+    modelKNN = KNNModel.KNN()
+    # modelSVM = SVMModel.SVM()
+    # modelXGBoost = XGBoostModel.XGBoost()
 
-    modelsList = [modelSVM]
+    modelsList =[modelKNN] #, modelSVM, modelXGBoost]
 
     # Split data into features and target
     targetLabel = 'outage'  # Assuming 'outage' is the target column
@@ -39,7 +40,7 @@ def main():
     y = data[targetLabel]
 
     # Cross-validation
-    cross_validator = ModelEvaluation.CrossValidation.CrossValidator(n_splits=5, storeResults=True)
+    cross_validator = CrossValidation.CrossValidator(n_splits=5, storeResults=True)
     resultsOfCrossValidation = []
 
     for model in modelsList:
@@ -49,7 +50,7 @@ def main():
         resultsOfCrossValidation.append(tuple(cross_validator.scores))
 
     # Display results
-    display = Display.Graphing.Graphs()
+    display = Graphing.Graphs()
     display.barPlot(resultsOfCrossValidation, 
                     title='Bar Plot', 
                     xlabel='Categories', 
