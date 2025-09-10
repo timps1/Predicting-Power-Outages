@@ -1,21 +1,16 @@
 import sklearn
-from sklearn import svm
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 
-class SVMModel:
+class sklearnModel:
     """
-    A class to handle SVM model training and evaluation.
-    """
+    Super class for other classes using sklearn to use shared functions
 
-    def __init__(self, kernel='linear', C=1.0):
-        self.kernel = kernel
-        self.C = C
-        self.model = svm.SVC(kernel=self.kernel, C=self.C)
+    Requires subclass to define model.
+    """
 
     def train(self, X, y):
         """
@@ -41,4 +36,3 @@ class SVMModel:
         print("Confusion Matrix:")
         print(confusion_matrix(y_test, y_pred))
         return accuracy
-    

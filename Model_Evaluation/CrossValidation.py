@@ -1,4 +1,3 @@
-from .. import Models
 from sklearn.model_selection import KFold
 import pandas as pd
 
