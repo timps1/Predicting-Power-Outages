@@ -1,6 +1,8 @@
 import sys
 import pandas as pd
 
+excludeTags = ["SU", "HY"]
+
 print(sys.argv)
 
 if len(sys.argv) < 3:
@@ -13,7 +15,7 @@ df = pd.read_csv(sys.argv[1])
 
 stateOfInterest = "Hawaii"
 
-dfSOI = df[df["state"] == stateOfInterest]
+dfSOI = df[(df["state"] == stateOfInterest) & (~df["phenom"].isin(excludeTags))]
 
 print(dfSOI)
 

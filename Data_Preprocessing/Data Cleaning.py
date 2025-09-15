@@ -1,9 +1,10 @@
 import pandas as pd
 import html
 import re
+import sys
 
 # 1) Load data
-df = pd.read_csv("akl_weather_combined_2010_to_2025.csv")
+df = pd.read_csv(sys.argv[1])
 
 # ---------- Helpers ----------
 def normalize_text(s):

@@ -4,10 +4,12 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import random
 import time
-from Weather_Data import CheckListForMissingData as CheckList
+import sys
+from datetime import datetime, timedelta
+import os
 
-def webScrapADay(day,month,year, outputFile):
-    url = f"https://www.timeanddate.com/scripts/cityajax.php?n=new-zealand/auckland&mode=historic&hd={year}{month}{day}&month={month}&year={year}&json=1"
+def webScrapADay(day,month,year, outputFile, dataFilePath, dataFilename):
+    url = f"https://www.timeanddate.com/scripts/cityajax.php?n=usa/honolulu&mode=historic&hd={year}{month}{day}&month={month}&year={year}&json=1"
 
     response = requests.get(url)
     response.raise_for_status()
@@ -52,26 +54,26 @@ def webScrapADay(day,month,year, outputFile):
         data.append([time, temp, weather, wind_speed, wind_direction, humidity, barometer, visibility])
 
     df = pd.DataFrame(data, columns=columns)
-    df.to_csv(f"Weather_Data/akl_weather_{day}_{month}_{year}.csv", index=False)
+    df.to_csv(f"{dataFilePath}{dataFilename}{day}_{month}_{year}.csv", index=False)
     outputFile.write("✅ CSV saved\n")
     print("✅ CSV saved")
     # print(df.head())
 
-def butFirstGetMissedDates(missedDates, outputFile, forbiddenCount):
-
-    print("Getting missed dates...")
-    outputFile.write("Getting missed dates...\n")
+def butFirstGetMissedDates(missedDates, outputFile, forbiddenCount, dataFilePath, dataFilename):
 
     for strDay, strMonth, strYear in missedDates:
         print(f"{strDay}/{strMonth}/{strYear}", end= " ")
         outputFile.write(f"{strDay}/{strMonth}/{strYear} ")
         try:
-            webScrapADay(strDay, strMonth, strYear, outputFile)
+            webScrapADay(strDay, strMonth, strYear, outputFile, dataFilePath, dataFilename)
         except Exception as e:
             print(f"Failed to scrape {strDay}/{strMonth}/{strYear}: {e}")
             outputFile.write(f"Failed to scrape {strDay}/{strMonth}/{strYear}: {e}\n")
             if "403" in str(e):
                 forbiddenCount += 1
+        if forbiddenCount > 10:
+            print("Too many forbidden requests, stopping the script.")
+            break
 
 
 def cycleThroughDates(outputFile, forbiddenCount):
@@ -126,13 +128,70 @@ def cycleThroughDates(outputFile, forbiddenCount):
             outputFile.write("Too many forbidden requests, stopping the script.\n")
             break
 
+def organiseDates():
+
+    if len(sys.argv) < 2:
+        print("MISSING INPUT IN CMD LINE")
+        sys.exit(1)
+    
+    df = pd.read_csv(sys.argv[1])
+    
+    hourStep = timedelta(hours=8)
+
+    datesList = []
+
+    for i in range(len(df['expired'])):
+        issued_dt = datetime.strptime(df['issued'][i].strip(), "%Y-%m-%d %H:%M:%S")
+        expired_dt = datetime.strptime(df['expired'][i].strip(), "%Y-%m-%d %H:%M:%S")
+
+        # adjust by buffer, then keep only the date
+        start = (issued_dt - hourStep).date()
+        end   = (expired_dt + hourStep).date()
+        
+        step = timedelta(days=1)
+        current = start
+
+        while current <= end:
+            yearStr = current.strftime("%Y")
+            monthStr = current.strftime("%m")
+            dayStr = current.strftime("%d")
+            datesList.append([dayStr, monthStr, yearStr]) 
+            current += step
+    datesList = set(datesList)
+    datesList = list(datesList)
+    return datesList
+        
+def checkMissingDates(missedDates, dataFilePath, dataFilename):
+    listOfFiles = os.listdir(dataFilePath)
+    happened = False
+    for i in range(len(missedDates)-1,-1,-1):
+        searchDate = missedDates[i]
+        dateStr = "_".join(searchDate) + ".csv"
+        if not happened:
+                print(searchDate)
+                print(dataFilename + dateStr)
+                print(listOfFiles[0])
+                happened = True
+        if dataFilename + dateStr in listOfFiles:
+            if not happened:
+                print("Works!!!!!")
+            missedDates.pop(i)
+
+
 def main():
+    dataFilePath = "../../Weather_Data/HFO/"
+    dataFilename = "hfo_weather_"
     forbiddenCount = 0
     outputFile = open("output.log", "w")
-    missedDates = CheckList.checkForMissingData()
+    if len(sys.argv) < 2:
+        print("MISSING INPUT IN CMD LINE")
+        sys.exit(1)
+    missedDates = organiseDates()
+    checkMissingDates(missedDates, dataFilePath, dataFilename)
+    print("Number of dates:", len(missedDates))
+    print(missedDates[0])
     if len(missedDates) > 0:
-        butFirstGetMissedDates(missedDates, outputFile, forbiddenCount)
-    cycleThroughDates(outputFile, forbiddenCount)
+        butFirstGetMissedDates(missedDates, outputFile, forbiddenCount, dataFilePath, dataFilename)
     outputFile.close()
 
 if __name__ == "__main__":
