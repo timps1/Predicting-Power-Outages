@@ -71,9 +71,6 @@ class CrossValidator:
         """
         Save the cross-validation results to CSV files.
         """
-        if not self.storeResults:
-            print("Results storage is disabled.")
-            return
         if self.model is None:
             print("No model has been set for cross-validation.")
             return
