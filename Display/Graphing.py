@@ -28,23 +28,28 @@ class Graphs:
         plt.grid(True)
         plt.show()
 
-    def barPlot(self, data, title='Bar Plot', xlabel='Categories', ylabel='Values', legend=[]):
+    def barPlot(self, series_list, title="", xlabel="", ylabel="", legend=None):
         """
-        Create a bar plot for the given data.
+        series_list: list of series, each series = [folds_list, values_list]
+        legend: list of labels for each series
+        """
+        num_series = len(series_list)
+        folds = series_list[0][0]  # assume all series have same folds
+        num_folds = len(folds)
         
-        Parameters:
-        - data: DataFrame or Series containing the data to plot.
-        - title: Title of the plot.
-        - xlabel: Label for the X-axis.
-        - ylabel: Label for the Y-axis.
-        """
+        x = np.arange(num_folds)
+        bar_width = 0.8 / num_series  # leave space between groups
         
         plt.figure(figsize=(10, 6))
-        for i, (fold, accuracy) in enumerate(data):
-            plt.bar(fold, accuracy, label=legend[i] if legend else f'Legend Label {i}')
-        plt.legend()
+        
+        for i, (folds_i, values_i) in enumerate(series_list):
+            plt.bar(x + i*bar_width, values_i, width=bar_width,
+                    label=legend[i] if legend else f'Series {i}')
+        
+        plt.xticks(x + bar_width*(num_series-1)/2, folds)
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.grid(axis='y')
+        plt.legend()
         plt.show()

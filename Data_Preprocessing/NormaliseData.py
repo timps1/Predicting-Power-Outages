@@ -15,7 +15,11 @@ class DataNormalizer:
         """
 
         for columnName in data.columns:
-            if methodLabel == 'zero_to_one':
+            if columnName == 'outage_flag':  # Skip target column
+                continue
+            elif "Humidity" in columnName:  # Skip Humidity columns
+                continue
+            elif methodLabel == 'zero_to_one':
                 self.normalizeDataZeroToOne(data, columnName)
             elif methodLabel == 'minus_one_to_one':
                 self.normalizeDataMinusOneToOne(data, columnName)
