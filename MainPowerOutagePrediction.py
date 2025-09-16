@@ -45,7 +45,7 @@ def main():
 
         modelClassParameterList =[]
 
-        for i in range(1, 50):
+        for i in range(1, 5):
             modelClassParameterList.append((SVMModel.SVM, ('linear',i)))
         
 

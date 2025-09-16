@@ -7,9 +7,6 @@ import os
 def saveModel(model):
 
     if len(sys.argv) < 4:
-        print("If you want to save models to a specific location run this next time:")
-        print("python MainPowerOutagePrediction.py <data_file_path> <Optional: Models_save_Location> ...")
-        print("Now saving to current directory")
         modelName = model.getModelInfo()
         path = f'Saved_Models/trained_model_{modelName}'
     else:
