@@ -36,3 +36,9 @@ class sklearnModel:
         print("Confusion Matrix:")
         print(confusion_matrix(y_test, y_pred))
         return accuracy
+    
+    def getModelInfo(self):
+        """
+        Get model information.
+        """
+        return str(self.model.__class__.__name__) + self.get_info()
