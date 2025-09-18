@@ -1,6 +1,7 @@
 from sklearn.metrics import classification_report
 from sklearn.model_selection import KFold
 import pandas as pd
+import os
 
 class CrossValidator:
     """
@@ -51,39 +52,63 @@ class CrossValidator:
             report_df = pd.DataFrame(report_dict).transpose()
             report_df["Fold"] = foldNumber
             report_df["Model"] = self.model.getModelInfo()
-            self.reports.append(report_df)
             reports_list.append(report_df)
 
             foldNumber += 1
 
+        # ---- Average accuracy ----
         average_score = sum(scores_list) / len(scores_list)
         print(f">>>>>>>>>>>>>>>> Average Score across {self.n_splits} folds: {average_score}")
 
-        average_report = pd.concat(reports_list).groupby('Model').mean().reset_index()
+        # ---- Average classification report ----
+        all_reports = pd.concat(reports_list)
+
+        # Drop non-numeric before averaging
+        avg_report = (
+            all_reports
+            .drop(columns=["Fold", "Model", "support"], errors="ignore")
+            .groupby(all_reports.index)
+            .mean(numeric_only=True)
+        )
+
+        # Keep model name as a column
+        model_name = reports_list[0]["Model"].iloc[0]
+        avg_report.insert(0, "Model", model_name)
+
         print("Average Classification Report:")
-        print(average_report)
+        print(avg_report)
+        self.reports.append(avg_report)
+
+        self.saveResults()
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         
+        self.scores.append({
+            "Model": self.model.getModelInfo(),
+            "Average_Accuracy": average_score
+        })
 
-        self.scores.append([folds_list, scores_list])
-    
-    def saveResults(self):
-        """
-        Save the cross-validation results to CSV files.
-        """
-        if self.model is None:
-            print("No model has been set for cross-validation.")
-            return
+    def saveResults(self): 
+        """ Save the cross-validation results to CSV files. """
         
+        if self.model is None: 
+            print("No model has been set for cross-validation.") 
+            return 
         try:
-            
-            # save detailed classification reports
+            # --- Save detailed classification reports ---
             if self.reports:
-                all_reports_df = pd.concat(self.reports, ignore_index=True)
-                all_reports_df.to_csv(f'classification_reports({self.model.__class__.__name__}).csv', index=False)
+                last_report_df = self.reports[-1]
+                reports_file = f'classification_reports({self.model.__class__.__name__}).csv'
 
-            print(f"Results saved for model {self.model.__class__.__name__}.")
-        
+                if os.path.exists(reports_file):
+                    existing_df = pd.read_csv(reports_file)
+                    all_reports_df = pd.concat([existing_df, last_report_df], ignore_index=True)
+                else:
+                    all_reports_df = last_report_df
+
+                all_reports_df.to_csv(reports_file, index=False)
+
+            print(f"✅ Results saved/appended for model {self.model.__class__.__name__}.")
+
         except Exception as e:
             print(f"Error saving cross-validation results: {e}")
 
@@ -94,3 +119,17 @@ class CrossValidator:
         self.scores = []
         self.reports = []
         self.model = None
+
+    def printBestModel(self):
+        """
+        Print the model with the best average accuracy across cross-validation.
+        """
+        if not self.scores:
+            print("No scores available. Run crossValidate first.")
+            return
+        
+        scores_df = pd.DataFrame(self.scores)
+        best_row = scores_df.loc[scores_df["Average_Accuracy"].idxmax()]
+
+        print("\n🏆 Best Model:")
+        print(best_row.to_frame().T)   # prints in table style

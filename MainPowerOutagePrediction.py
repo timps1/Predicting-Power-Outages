@@ -45,8 +45,8 @@ def main():
 
         modelClassParameterList =[]
 
-        for i in range(1, 5):
-            modelClassParameterList.append((SVMModel.SVM, ('linear',i)))
+        for i in range(11, 50, 5):
+            modelClassParameterList.append((SVMModel.SVM, ('rbf',i)))
         
 
     # Split data into features and target
@@ -65,7 +65,7 @@ def main():
         sys.exit(1)
 
     # Cross-validation
-    cross_validator = CrossValidation.CrossValidator(n_splits=5, storeResults=True)
+    cross_validator = CrossValidation.CrossValidator(n_splits=10, storeResults=True)
 
     modelsList = []
     current_model_type = None
@@ -78,7 +78,6 @@ def main():
             current_model_type = model.getType()
 
         elif current_model_type != model.getType():
-            cross_validator.saveResults()  # Save results for the previous model type
             current_model_type = model.getType()
             cross_validator.reset()  # Reset cross-validator for new model type
 
@@ -93,21 +92,19 @@ def main():
 
         modelsList.append(model)
         print(f"------------------------------------------------------------")
-
-        if i == len(modelClassParameterList) - 1:
-            cross_validator.saveResults()  # Save results for the last model type
-
+    
+    cross_validator.printBestModel()
     # Display results
-    display = Graphing.Graphs()
-    display.barPlot(cross_validator.scores, 
-                    title='Bar Plot', 
-                    xlabel='Categories', 
-                    ylabel='Values', 
-                    legend=[model.getModelInfo() for model in modelsList])
+    # display = Graphing.Graphs()
+    # display.barPlot(cross_validator.scores, 
+    #                 title='Bar Plot', 
+    #                 xlabel='Categories', 
+    #                 ylabel='Values', 
+    #                 legend=[model.getModelInfo() for model in modelsList])
     
     # Save models
-    for model in modelsList:
-        IOModels.saveModel(model)
+    # for model in modelsList:
+    #     IOModels.saveModel(model)
 
 
 def check_for_non_numeric_values(df):
