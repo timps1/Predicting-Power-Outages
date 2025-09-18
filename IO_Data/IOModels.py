@@ -7,17 +7,18 @@ import os
 def saveModel(model):
 
     if len(sys.argv) < 4:
-        print("If you want to save models to a specific location run this next time:")
-        print("python MainPowerOutagePrediction.py <data_file_path> <Optional: Models_save_Location> ...")
-        print("Now saving to current directory")
-        modelName = model.__class__.__name__()
-        path = f'trained_model_{modelName}'
+        modelName = model.getModelInfo()
+        path = f'Saved_Models/trained_model_{modelName}'
     else:
-        path = sys.argv[3]
+        if sys.argv[3] == "_":
+            modelName = model.getModelInfo()
+            path = f'Saved_Models/trained_model_{modelName}'
+        else:
+            path = sys.argv[3]
 
     try:
         filename = f'{path}.joblib'
-        joblib.dump(model, file)
+        joblib.dump(model, filename)
     except Exception as ex:
         print("joblib library failed to save")
         print("Error message", ex)
@@ -30,16 +31,19 @@ def saveModel(model):
             print("Error message", ex)
             
 
-def loadModel():
+def loadModel(file=None):
 
     if len(sys.argv) < 5:
         print("If you want to save models to a specific location run this next time:")
-        print("python MainPowerOutagePrediction.py <data_file_path> <Models_save_Location> <Models_to_load_Location: folder_path_or_file_path> ...")
+        print("python MainPowerOutagePrediction.py <data_file_path> <Models_save_Location> <Models_to_load_Location: folder_path> ...")
         sys.exit(1)
 
-    path = sys.argv[4]
-    isFile = False
-    isDirectory = False
+    if file is not None:
+        path = file
+    else:
+        path = sys.argv[4]
+        isFile = False
+        isDirectory = False
 
     if os.path.isfile(path):
         print(f"'{path}' is a file.")
@@ -58,10 +62,21 @@ def loadModel():
             with open(path, 'rb') as file:
                 loaded_model = pickle.load(file)
         else:
-            print(f"{path[path.rfind("."):]} is not a supported file type")
+            indexDot = path.rfind(".")
+            print(f"{path[indexDot:]} is not a supported file type")
             sys.exit(1)
         
     elif isDirectory:
-        #Add function later
-        return
+        loaded_model = []
+        files = os.listdir(path)
+        model_files = [f for f in files if f.endswith('.joblib') or f.endswith('.pkl')]
+        if not model_files:
+            print("No model files found in the directory.")
+            sys.exit(1)
+
+        for file in model_files:
+            full_path = os.path.join(path, file)
+            loaded_model.append(loadModel(full_path))
+
+    return loaded_model
     
