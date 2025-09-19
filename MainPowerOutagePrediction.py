@@ -1,12 +1,125 @@
 import sys
-from Models import KNNModel, SVMModel, XGBoostModel
+from Models.SklearnModels import sklearnModel
 from IO_Data import IOData, IOModels
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 from Model_Evaluation import CrossValidation
-from Data_Preprocessing import NormaliseData
-from Display import Graphing
+from sklearn import metrics
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import StratifiedKFold
+# from Models.LSTMModelFile import LSTMModel
 import pandas as pd
 
 
+def newMethodUsingGridSearchCV(X, y):
+
+    scoring = {
+        "accuracy": metrics.make_scorer(metrics.accuracy_score),
+        "f1": metrics.make_scorer(metrics.f1_score)
+    }
+
+    parameters_list = [{'kernel': 'rbf', 'C': 60}]
+    modelClassParameterList = [
+        SVC()
+    ]
+
+    cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+    parameter_grid_list = [
+        {'kernel': ['rbf'], 'C': [1, 20, 60]}
+    ]
+    
+    for i, model in enumerate(modelClassParameterList):
+        print(f"Starting GridSearchCV for {model.__class__.__name__}...")
+
+        grid = GridSearchCV(
+            estimator=model,
+            param_grid=parameter_grid_list[i],
+            cv=cv,
+            n_jobs=-1,
+            verbose=2, 
+            scoring=scoring,
+            refit='f1'  # refit using the f1 score
+        )
+        
+        # ✅ Fit the GridSearchCV to your data
+        grid.fit(X, y)
+        
+        # Access best parameters and CV results after fitting
+        print(f"Best parameters found: {grid.best_params_}")
+        print(f"Best cross-validation score: {grid.best_score_}")
+        
+        results_df = pd.DataFrame(grid.cv_results_)
+        results_df.to_csv(f'GridSearchCV_Results({model.__class__.__name__}).csv', index=False)
+        print(f"Grid search results saved to GridSearchCV_Results({model.__class__.__name__}).csv")
+
+
+def oldMethodOfCrossValidation(X, y):
+    # baseLearners = [
+    #         ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
+
+    #         ('svc', SVC(kernel='rbf', C=60)),
+
+    #         ('knn', KNeighborsClassifier(n_neighbors=4, 
+    #                                         weights='distance', 
+    #                                         metric='manhattan'))
+
+    #     ]
+    
+    # parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True}
+
+    # modelClassParameterList = [StackingClassifier(**parameters)]
+
+    # parameters_list = [
+    #     {'n_neighbors' : 4, "weights" : 'distance', "metric" : 'manhattan'}, #KNN_parameters
+    #     {'kernel' : 'rbf', 'C' : 60}, #SVM_parameters
+    #     {'n_estimators' : 400, 'random_state' : 42}, #RF_parameters
+    #     {'learning_rate' : 0.1, 'n_estimators' : 100, 'max_depth' : 20}, #XGB_parameters
+    #     {"lstm_units": 64, "dropout": 0.5, "lr": 5e-4, "batch_size": 32}  #LSTM_parameters
+    # ]
+    # modelClassParameterList = [
+        
+    #     KNeighborsClassifier(**parameters_list[0]),
+    #     SVC(**parameters_list[1]),
+    #     RandomForestClassifier(**parameters_list[2]),
+    #     LSTMModel(**parameters_list[4])
+    # ]
+    parameters_list = []
+    modelClassParameterList = []
+    for i in range(0,101,10):
+        parameters = {'kernel': 'rbf', 'C': i if i != 0 else 1}
+        parameters_list.append(parameters)
+        modelClassParameterList.append(SVC(**parameters))
+
+    # Cross-validation
+    cross_validator = CrossValidation.CrossValidator(n_splits=10, storeResults=True)
+
+    modelsList = []
+    current_model_type = None
+
+    for i, model in enumerate(modelClassParameterList):
+
+        if current_model_type is None:
+            current_model_type = model.__class__.__name__
+
+        elif current_model_type != model.__class__.__name__:
+            current_model_type = model.__class__.__name__
+            cross_validator.reset()  # Reset cross-validator for new model type
+
+        model = sklearnModel(model=model, parameters=parameters_list[i] if i < len(parameters_list) else {})
+        print(f"------------------------------------------------------------")
+        print(f"Model {i}: {model.getModelInfo()}")
+
+        cross_validator.storeResults = (i == len(modelsList) - 1)
+
+        cross_validator.setModel(model)
+        print(f"Cross-validating model: {model.getModelInfo()}")
+        cross_validator.crossValidate(X.values, y.values)
+
+        modelsList.append(model)
+        print(f"------------------------------------------------------------")
+    
+    cross_validator.printBestModel()
 
 def main():
     """
@@ -15,39 +128,14 @@ def main():
 
     # Get input data
     data = IOData.getInputData()
-
-    if False: #Just for normalizing data/preprocessing
-        # Normalize/Preprocess data --- If normalization is needed
-        print("Preprocess data...")
-        methodLabel='zero_to_one'
-        normalizer = NormaliseData.DataNormalizer()
-        normalizer.normalizeDataByColumn(data, methodLabel)
-        
-        # Save normalized data
-        print("Save normalized data...", end=" ")
-        if sys.argv[1].rfind("/") != -1:
-            print(f'{sys.argv[1][:sys.argv[1].rfind("/")+1]}normalized_{sys.argv[1][sys.argv[1].rfind("/")+1:]}')
-            IOData.SaveInputData(data, f'{sys.argv[1][:sys.argv[1].rfind("/")+1]}normalized_{sys.argv[1][sys.argv[1].rfind("/")+1:]}')
-        else:
-            print(f'normalized_{sys.argv[1]}')
-            IOData.SaveInputData(data, f'normalized_{sys.argv[1]}')
-        return
     
     print(len(sys.argv))
     if len(sys.argv) > 4:
         ############## Not sure if it works ##############
         # Load pre-trained model
         modelsRetrainList = IOModels.loadModel()
-        print(f"Loaded model: {model.__class__.__name__}")
+        print(f"Loaded model: {modelsRetrainList.__class__.__name__}")
         sys.exit(0)
-    
-    else:
-
-        modelClassParameterList =[]
-
-        for i in range(11, 50, 5):
-            modelClassParameterList.append((SVMModel.SVM, ('rbf',i)))
-        
 
     # Split data into features and target
     targetLabel = 'outage_flag'  # Assuming 'outage' is the target column
@@ -64,47 +152,12 @@ def main():
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
-    # Cross-validation
-    cross_validator = CrossValidation.CrossValidator(n_splits=10, storeResults=True)
+    newMethodUsingGridSearchCV(X, y)
 
-    modelsList = []
-    current_model_type = None
+    # oldMethodOfCrossValidation(X, y)
 
-    for i, (model_class, parameters) in enumerate(modelClassParameterList):
 
-        model = model_class(parameters)  # Re-initialize model with parameters
-
-        if current_model_type is None:
-            current_model_type = model.getType()
-
-        elif current_model_type != model.getType():
-            current_model_type = model.getType()
-            cross_validator.reset()  # Reset cross-validator for new model type
-
-        print(f"------------------------------------------------------------")
-        print(f"Model {i}: {model.getModelInfo()}")
-
-        cross_validator.storeResults = (i == len(modelsList) - 1)
-
-        cross_validator.setModel(model)
-        print(f"Cross-validating model: {model.__class__.__name__}")
-        cross_validator.crossValidate(X.values, y.values)
-
-        modelsList.append(model)
-        print(f"------------------------------------------------------------")
     
-    cross_validator.printBestModel()
-    # Display results
-    # display = Graphing.Graphs()
-    # display.barPlot(cross_validator.scores, 
-    #                 title='Bar Plot', 
-    #                 xlabel='Categories', 
-    #                 ylabel='Values', 
-    #                 legend=[model.getModelInfo() for model in modelsList])
-    
-    # Save models
-    # for model in modelsList:
-    #     IOModels.saveModel(model)
 
 
 def check_for_non_numeric_values(df):

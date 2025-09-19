@@ -11,6 +11,15 @@ class sklearnModel:
 
     Requires subclass to define model.
     """
+    def __init__(self, model=None, parameters=None):
+        self.model = model  # Placeholder for the sklearn model instance
+        self.parameters = parameters  # Placeholder for model parameters
+
+    def fit(self, X, y):
+        """
+        Fit the model to the training data.
+        """
+        self.model.fit(X, y)
 
     def train(self, X, y):
         """
@@ -41,4 +50,28 @@ class sklearnModel:
         """
         Get model information.
         """
-        return str(self.model.__class__.__name__) + self.get_info()
+        aString = str(self.model.__class__.__name__)
+        for key, value in self.parameters.items():
+            value = self.processParameters(value)
+            aString += f"({key}_{value})"
+
+        return aString
+    
+    def processParameters(self, value):
+        """
+        Process and set model parameters.
+        """
+        if isinstance(value, float):
+            value = round(value, 4)
+        elif isinstance(value, str):
+            value = value.replace(" ", "_")
+        elif isinstance(value, dict):
+            value = len(value)  # just show number of items in dict
+        elif isinstance(value, tuple):
+            aString = value[0]
+        elif isinstance(value, list):
+            aString = ""
+            for i, v in enumerate(value):
+                aString += self.processParameters(v) + ("_" if i < len(value) - 1 else "")
+            value = aString
+        return value

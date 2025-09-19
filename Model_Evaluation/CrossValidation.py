@@ -1,4 +1,5 @@
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 import pandas as pd
 import os
@@ -22,6 +23,7 @@ class CrossValidator:
         """
         self.model = model
 
+
     def crossValidate(self, X, y):
         """
         Perform cross-validation on the model.
@@ -39,11 +41,11 @@ class CrossValidator:
             y_train, y_test = y[train_index], y[test_index]
             
             # train and predict
-            self.model.train(X_train, y_train)
+            self.model.fit(X_train, y_train)
             y_pred = self.model.predict(X_test)
 
             # overall score
-            score = self.model.evaluate(X_test, y_test)
+            score = accuracy_score(y_pred, y_test)
             folds_list.append(foldNumber)
             scores_list.append(score)
 
@@ -83,7 +85,7 @@ class CrossValidator:
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         
         self.scores.append({
-            "Model": self.model.getModelInfo(),
+            "Model": self.model,
             "Average_Accuracy": average_score
         })
 
