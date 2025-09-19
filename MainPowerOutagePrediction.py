@@ -26,7 +26,7 @@ def newMethodUsingGridSearchCV(X, y):
 
     cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
     parameter_grid_list = [
-        {'kernel': ['rbf'], 'C': [1, 20, 60]}
+        {'kernel': ['linear'], 'C': [1]}  # SVM_parameters
     ]
     
     for i, model in enumerate(modelClassParameterList):

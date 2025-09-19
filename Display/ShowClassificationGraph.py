@@ -11,8 +11,9 @@ if len(sys.argv) != 2:
 df = pd.read_csv(sys.argv[1])
 
 # Extract numeric C value from Model string
-df["C"] = df["Model"].apply(lambda x: float(re.search(r"C_(\d+(\.\d+)?)", x).group(1)))
-
+df["C"] = df["Model"].apply(
+    lambda x: float(re.search(r"C_([\d.]+)", x).group(1)) if re.search(r"C_([\d.]+)", x) else None
+)
 # Extract model type (everything before (C_x))
 df["ModelType"] = df["Model"].apply(lambda x: re.sub(r"\(C_\d+\)", "", x))
 
@@ -42,7 +43,7 @@ def plot_metrics(ax, df, title):
     ax.legend()
 
 def plot_metrics_accuracy(ax, df, title):
-    ax.plot(df["C"], df["f1-score"], marker="o", label="F1-score")
+    ax.plot(df["C"], df["f1-score"], marker="o", label="accuracy", color='red')
     ax.set_title(title)
     ax.set_xlabel("C Parameter")
     ax.set_ylabel("Score")
@@ -53,7 +54,7 @@ def plot_metrics_accuracy(ax, df, title):
 # Plot each group
 plot_metrics(axes[0], zero_df, "Class 0")
 plot_metrics(axes[1], one_df, "Class 1")
-plot_metrics(axes[2], accuracy_df, "Accuracy")
+plot_metrics_accuracy(axes[2], accuracy_df, "Accuracy")
 plot_metrics(axes[3], macro_df, "Macro Avg")
 plot_metrics(axes[4], weighted_df, "Weighted Avg")
 

@@ -99,8 +99,10 @@ class CrossValidator:
             # --- Save detailed classification reports ---
             if self.reports:
                 last_report_df = self.reports[-1]
-                reports_file = f'classification_reports({self.model.__class__.__name__}).csv'
-
+                try:
+                    reports_file = f'classification_reports({self.model.model.__class__.__name__}).csv'
+                except:
+                    reports_file = f'classification_reports({self.model.__class__.__name__}).csv'
                 if os.path.exists(reports_file):
                     existing_df = pd.read_csv(reports_file)
                     all_reports_df = pd.concat([existing_df, last_report_df], ignore_index=True)
