@@ -44,12 +44,50 @@ def newMethodUsingGridSearchCV(X, y):
 
     parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True, 'cv': cv5}
 
-    modelClassParameterList = [SVC()]
+    modelClassParameterList = [StackingClassifier(**parameters)]
     
     parameter_grid_list = [
         {
-            'C': [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-            'kernel': ['poly'],
+        'final_estimator': [LogisticRegression(max_iter=10000)], 
+        'final_estimator__tol': [1e-4, 1e-3, 1e-2, 1e-1, 1],
+        'final_estimator__C': [1, 10, 20, 30, 40],
+        'passthrough': [True, False]
+        },
+
+        {
+            'final_estimator': [XGBClassifier()],
+            'final_estimator__n_estimators': [100, 200, 400],
+            'final_estimator__learning_rate': [0.01, 0.05, 0.1],
+            'final_estimator__max_depth': [3, 5, 7],
+            'final_estimator__subsample': [0.8, 1.0],
+            'final_estimator__colsample_bytree': [0.8, 1.0],
+            'final_estimator__gamma': [0, 1, 5],
+            'passthrough': [True, False]
+        },
+
+        {
+            'final_estimator': [KNeighborsClassifier()],
+            'final_estimator__n_neighbors': [3, 5, 7, 9],
+            'final_estimator__weights': ['uniform', 'distance'],
+            'final_estimator__metric': ['euclidean', 'manhattan'],
+            'passthrough': [True, False]
+        },
+
+        {
+            'final_estimator': [SVC(probability=True)],
+            'final_estimator__C': [1, 10, 20, 30, 40, 50, 60],
+            'final_estimator__kernel': ['linear', 'rbf', 'poly'],
+            'passthrough': [True, False]
+        },
+
+        {
+            'final_estimator': [RandomForestClassifier()],
+            'final_estimator__n_estimators': [100, 200, 400],
+            'final_estimator__max_depth': [None, 10, 20, 30],
+            'final_estimator__min_samples_split': [2, 5, 10],
+            'final_estimator__min_samples_leaf': [1, 2, 4],
+            'final_estimator__bootstrap': [True, False],
+            'passthrough': [True, False]
         }
     ]
     
@@ -77,67 +115,6 @@ def newMethodUsingGridSearchCV(X, y):
         results_df.to_csv(f'GridSearchCV_Results({model.__class__.__name__}).csv', index=False)
         print(f"Grid search results saved to GridSearchCV_Results({model.__class__.__name__}).csv")
 
-
-def oldMethodOfCrossValidation(X, y):
-    baseLearners = [
-            ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
-
-            ('svc', SVC(kernel='rbf', C=60)),
-
-            ('knn', KNeighborsClassifier(n_neighbors=4, 
-                                            weights='distance', 
-                                            metric='manhattan'))
-
-        ]
-    
-    parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True}
-
-    modelClassParameterList = [StackingClassifier(**parameters)]
-
-    parameters_list = [
-        {'n_neighbors' : 4, "weights" : 'distance', "metric" : 'manhattan'}, #KNN_parameters
-        {'kernel' : 'rbf', 'C' : 60}, #SVM_parameters
-        {'n_estimators' : 400, 'random_state' : 42}, #RF_parameters
-        {'learning_rate' : 0.1, 'n_estimators' : 100, 'max_depth' : 20}, #XGB_parameters
-        # {"lstm_units": 64, "dropout": 0.5, "lr": 5e-4, "batch_size": 32}  #LSTM_parameters
-    ]
-    modelClassParameterList = [
-        
-        KNeighborsClassifier(**parameters_list[0]),
-        SVC(**parameters_list[1]),
-        RandomForestClassifier(**parameters_list[2]),
-        # LSTMModel(**parameters_list[4])
-    ]
-
-    # Cross-validation
-    cross_validator = CrossValidation.CrossValidator(n_splits=10, storeResults=True)
-
-    modelsList = []
-    current_model_type = None
-
-    for i, model in enumerate(modelClassParameterList):
-
-        if current_model_type is None:
-            current_model_type = model.__class__.__name__
-
-        elif current_model_type != model.__class__.__name__:
-            current_model_type = model.__class__.__name__
-            cross_validator.reset()  # Reset cross-validator for new model type
-
-        model = sklearnModel(model=model, parameters=parameters_list[i] if i < len(parameters_list) else {})
-        print(f"------------------------------------------------------------")
-        print(f"Model {i}: {model.getModelInfo()}")
-
-        cross_validator.storeResults = (i == len(modelsList) - 1)
-
-        cross_validator.setModel(model)
-        print(f"Cross-validating model: {model.getModelInfo()}")
-        cross_validator.crossValidate(X.values, y.values)
-
-        modelsList.append(model)
-        print(f"------------------------------------------------------------")
-    
-    cross_validator.printBestModel()
 
 def main():
     """
@@ -171,11 +148,6 @@ def main():
         sys.exit(1)
 
     newMethodUsingGridSearchCV(X, y)
-
-    # oldMethodOfCrossValidation(X, y)
-
-
-    
 
 
 def check_for_non_numeric_values(df):
