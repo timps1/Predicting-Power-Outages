@@ -24,7 +24,7 @@ def newMethodUsingGridSearchCV(X, y):
     baseLearners = [
             ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
 
-            ('svc', SVC(kernel='rbf', C=60, probability=True)),
+            ('svc', SVC(kernel='rbf', C=20, probability=True)),
 
             ('knn', KNeighborsClassifier(n_neighbors=4, 
                                             weights='distance', 
@@ -38,11 +38,11 @@ def newMethodUsingGridSearchCV(X, y):
                                   use_label_encoder=False))
         ]
     
-    cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+    cv_outer = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
     
-    cv5 = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    cv_inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True, 'cv': cv5}
+    parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True, 'cv': cv_inner}
 
     modelClassParameterList = [SVC()]
     
@@ -59,7 +59,7 @@ def newMethodUsingGridSearchCV(X, y):
         grid = GridSearchCV(
             estimator=model,
             param_grid=parameter_grid_list[i],
-            cv=cv,
+            cv=cv_outer,
             n_jobs=-1,
             verbose=2, 
             scoring=scoring,
@@ -147,7 +147,6 @@ def main():
     # Get input data
     data = IOData.getInputData()
     
-    print(len(sys.argv))
     if len(sys.argv) > 4:
         ############## Not sure if it works ##############
         # Load pre-trained model

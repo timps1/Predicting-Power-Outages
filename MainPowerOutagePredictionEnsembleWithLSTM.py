@@ -12,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 # from Models.LSTMModelFile import LSTMModel
 import pandas as pd
 from xgboost import XGBClassifier
+from Models.LSTMModelFile import LSTMEstimator
 
 
 def newMethodUsingGridSearchCV(X, y):
@@ -21,24 +22,33 @@ def newMethodUsingGridSearchCV(X, y):
         "f1": metrics.make_scorer(metrics.f1_score)
     }
 
+    lstm_params = {"lstm_units": 64, 
+                   "dropout": 0.5, 
+                   "lr": 5e-4, 
+                   "batch_size": 32}
+    
+    lstm_model = LSTMEstimator(**lstm_params)  # Placeholder for LSTM model instance
+
 
     baseLearners = [
-            ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
+            # ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
 
-            ('svc', SVC(kernel='rbf', C=20, probability=True)),
+            # ('svc', SVC(kernel='rbf', C=20, probability=True)),
 
-            ('knn', KNeighborsClassifier(n_neighbors=4, 
-                                            weights='distance', 
-                                            metric='manhattan')),
+            # ('knn', KNeighborsClassifier(n_neighbors=4, 
+            #                                 weights='distance', 
+            #                                 metric='manhattan')),
 
-            ('xgb', XGBClassifier(learning_rate = 0.1,
-                                  gamma=0, 
-                                  max_depth=18,
-                                  subsample = 1,
-                                  random_state=42)),
+            # ('xgb', XGBClassifier(learning_rate = 0.1,
+            #                       gamma=0, 
+            #                       max_depth=18,
+            #                       subsample = 1,
+            #                       random_state=42)),
+            
+            ('lstm', lstm_model)
         ]
     
-    cv_outer = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    cv_outer = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
     
     cv_inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
@@ -121,7 +131,7 @@ def main():
 
     # Get input data
     data = IOData.getInputData()
-    
+
     if len(sys.argv) > 4:
         ############## Not sure if it works ##############
         # Load pre-trained model
