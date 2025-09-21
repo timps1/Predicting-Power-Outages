@@ -31,7 +31,7 @@ def newMethodUsingGridSearchCV(X, y):
                                             weights='distance', 
                                             metric='manhattan')),
 
-            ('xgb', XGBClassifier(learning_rate = 0.1,
+            ('xgb', XGBClassifier(learning_rate = 0.5,
                                   gamma=0, 
                                   max_depth=18,
                                   subsample = 1,
@@ -121,7 +121,7 @@ def main():
 
     # Get input data
     data = IOData.getInputData()
-    
+
     if len(sys.argv) > 4:
         ############## Not sure if it works ##############
         # Load pre-trained model

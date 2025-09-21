@@ -31,19 +31,19 @@ def newMethodUsingGridSearchCV(X, y):
 
 
     baseLearners = [
-            # ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
+            ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
 
-            # ('svc', SVC(kernel='rbf', C=20, probability=True)),
+            ('svc', SVC(kernel='rbf', C=20, probability=True)),
 
-            # ('knn', KNeighborsClassifier(n_neighbors=4, 
-            #                                 weights='distance', 
-            #                                 metric='manhattan')),
+            ('knn', KNeighborsClassifier(n_neighbors=4, 
+                                            weights='distance', 
+                                            metric='manhattan')),
 
-            # ('xgb', XGBClassifier(learning_rate = 0.1,
-            #                       gamma=0, 
-            #                       max_depth=18,
-            #                       subsample = 1,
-            #                       random_state=42)),
+            ('xgb', XGBClassifier(learning_rate = 0.5,
+                                  gamma=0, 
+                                  max_depth=18,
+                                  subsample = 1,
+                                  random_state=42)),
             
             ('lstm', lstm_model)
         ]
