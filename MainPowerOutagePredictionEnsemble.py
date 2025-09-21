@@ -47,29 +47,6 @@ def newMethodUsingGridSearchCV(X, y):
     modelClassParameterList = [StackingClassifier(**parameters)]
     
     parameter_grid_list = [
-        {
-        'final_estimator': [LogisticRegression(max_iter=10000)], 
-        'final_estimator__tol': [1e-4, 1e-2, 1],
-        'final_estimator__C': [1, 20, 40],
-        'passthrough': [True, False]
-        },
-
-        {
-            'final_estimator': [XGBClassifier()],
-            'final_estimator__n_estimators': [100, 300],
-            'final_estimator__learning_rate': [0.01, 0.05, 0.1],
-            'final_estimator__max_depth': [3, 5, 7],
-            'final_estimator__gamma': [0, 5],
-            'passthrough': [True, False]
-        },
-
-        {
-            'final_estimator': [KNeighborsClassifier()],
-            'final_estimator__n_neighbors': [3, 5, 7, 9],
-            'final_estimator__weights': ['uniform', 'distance'],
-            'final_estimator__metric': ['euclidean', 'manhattan'],
-            'passthrough': [True, False]
-        },
 
         {
             'final_estimator': [SVC(probability=True)],
