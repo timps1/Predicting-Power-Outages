@@ -3,9 +3,7 @@ import pandas as pd
 
 excludeTags = ["SU", "HY"]
 
-print(sys.argv)
-
-if len(sys.argv) < 3:
+if len(sys.argv) < 2:
     print("Missing inputs")
     sys.exit(1)
 
@@ -13,10 +11,12 @@ print(sys.argv[1])
 
 df = pd.read_csv(sys.argv[1])
 
-stateOfInterest = "Hawaii"
+wfoOfInterest = "HFO"
 
-dfSOI = df[(df["state"] == stateOfInterest) & (~df["phenom"].isin(excludeTags))]
+dfSOI = df[(df["wfo"] == wfoOfInterest) & (~df["phenom"].isin(excludeTags))]
 
 print(dfSOI)
 
-dfSOI.to_csv(sys.argv[2])
+slashIndex = sys.argv[1].rfind("/")
+nexFilename = sys.argv[1][:slashIndex+1] + wfoOfInterest.upper() + "_wwa.csv"
+dfSOI.to_csv(nexFilename)

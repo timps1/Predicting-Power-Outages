@@ -13,10 +13,6 @@ df = df.apply(pd.to_numeric, errors='coerce')
 # 3. Fill missing (NaN) with 0
 df = df.fillna(0.0)
 
-for col in df.columns:
-    if "Humidity" in col:
-        df[col] = df[col] / 100.0  # Convert percentage to decimal
-
 cols_to_remove = ["Time_0", "Time_1", "Time_2", "Time_3"]  # your list here
 for col in df.columns:
     if col.startswith("Time_") and col not in cols_to_remove:

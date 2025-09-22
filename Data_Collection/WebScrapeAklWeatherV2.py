@@ -2,13 +2,12 @@ import requests
 import json5
 import pandas as pd
 from bs4 import BeautifulSoup
-import random
 import time
 import sys
 from datetime import datetime, timedelta
 import os
 
-def webScrapADay(day,month,year, outputFile, dataFilePath, dataFilename):
+def webScrapADay(day,month,year, dataFilePath, dataFilename):
     url = f"https://www.timeanddate.com/scripts/cityajax.php?n=usa/honolulu&mode=historic&hd={year}{month}{day}&month={month}&year={year}&json=1"
 
     response = requests.get(url)
@@ -55,20 +54,17 @@ def webScrapADay(day,month,year, outputFile, dataFilePath, dataFilename):
 
     df = pd.DataFrame(data, columns=columns)
     df.to_csv(f"{dataFilePath}{dataFilename}{day}_{month}_{year}.csv", index=False)
-    outputFile.write("✅ CSV saved\n")
     print("✅ CSV saved")
     # print(df.head())
 
-def butFirstGetMissedDates(missedDates, outputFile, forbiddenCount, dataFilePath, dataFilename):
+def butFirstGetMissedDates(missedDates, forbiddenCount, dataFilePath, dataFilename):
 
     for strDay, strMonth, strYear in missedDates:
         print(f"{strDay}/{strMonth}/{strYear}", end= " ")
-        outputFile.write(f"{strDay}/{strMonth}/{strYear} ")
         try:
-            webScrapADay(strDay, strMonth, strYear, outputFile, dataFilePath, dataFilename)
+            webScrapADay(strDay, strMonth, strYear, dataFilePath, dataFilename)
         except Exception as e:
             print(f"Failed to scrape {strDay}/{strMonth}/{strYear}: {e}")
-            outputFile.write(f"Failed to scrape {strDay}/{strMonth}/{strYear}: {e}\n")
             if "403" in str(e):
                 forbiddenCount += 1
         if forbiddenCount > 10:
@@ -76,7 +72,7 @@ def butFirstGetMissedDates(missedDates, outputFile, forbiddenCount, dataFilePath
             break
 
 
-def cycleThroughDates(outputFile, forbiddenCount):
+def cycleThroughDates(forbiddenCount):
 
     startYear, endYear = 2023, 2025
     startMonth, endMonth = 1, 12
@@ -105,18 +101,12 @@ def cycleThroughDates(outputFile, forbiddenCount):
                 if day < 10:
                     strDay = "0" + strDay
                 print(f"{strDay}/{strMonth}/{strYear}", end= " ")
-                outputFile.write(f"{strDay}/{strMonth}/{strYear} ")
                 try:
-                    webScrapADay(strDay,strMonth,strYear, outputFile)
+                    webScrapADay(strDay,strMonth,strYear)
                 except Exception as e:
                     print("FAILED", e)
-                    outputFile.write(f"Failed {e}\n")
                     if "403" in str(e):
                         forbiddenCount += 1
-                
-                number = random.randint(1,3)
-
-                # time.sleep(number) #website was getting suspcious
             
             startDay = 1  # Reset day to 1 after the first month
             if forbiddenCount > 10:
@@ -125,28 +115,22 @@ def cycleThroughDates(outputFile, forbiddenCount):
         startMonth = 1  # Reset month to January after the first year
         if forbiddenCount > 10:
             print("Too many forbidden requests, stopping the script.")
-            outputFile.write("Too many forbidden requests, stopping the script.\n")
             break
 
 def organiseDates():
-
-    if len(sys.argv) < 2:
-        print("MISSING INPUT IN CMD LINE")
-        sys.exit(1)
     
     df = pd.read_csv(sys.argv[1])
     
-    hourStep = timedelta(hours=8)
+    hourStep = timedelta(hours=12)
 
     datesList = []
 
     for i in range(len(df['expired'])):
         issued_dt = datetime.strptime(df['issued'][i].strip(), "%Y-%m-%d %H:%M:%S")
-        expired_dt = datetime.strptime(df['expired'][i].strip(), "%Y-%m-%d %H:%M:%S")
 
         # adjust by buffer, then keep only the date
         start = (issued_dt - hourStep).date()
-        end   = (expired_dt + hourStep).date()
+        end   = (issued_dt + hourStep).date()
         
         step = timedelta(days=1)
         current = start
@@ -155,10 +139,12 @@ def organiseDates():
             yearStr = current.strftime("%Y")
             monthStr = current.strftime("%m")
             dayStr = current.strftime("%d")
-            datesList.append([dayStr, monthStr, yearStr]) 
+            datesList.append((dayStr, monthStr, yearStr)) 
             current += step
-    datesList = set(datesList)
-    datesList = list(datesList)
+    
+    if len(datesList) > 0:
+        datesList = set(datesList)
+        datesList = list(datesList)
     return datesList
         
 def checkMissingDates(missedDates, dataFilePath, dataFilename):
@@ -179,20 +165,28 @@ def checkMissingDates(missedDates, dataFilePath, dataFilename):
 
 
 def main():
-    dataFilePath = "../../Weather_Data/HFO/"
-    dataFilename = "hfo_weather_"
+    if len(sys.argv) < 2:
+        print("MISSING INPUT IN CMD LINE")
+        sys.exit(1)
+    elif len(sys.argv) == 2:
+        dataFilePath = "."
+    else:
+        dataFilePath = sys.argv[2]
+    
+    wfoTag = "hfo"
+
+    dataFilename = f"{wfoTag.lower()}_weather_"
     forbiddenCount = 0
-    outputFile = open("output.log", "w")
     if len(sys.argv) < 2:
         print("MISSING INPUT IN CMD LINE")
         sys.exit(1)
     missedDates = organiseDates()
     checkMissingDates(missedDates, dataFilePath, dataFilename)
     print("Number of dates:", len(missedDates))
-    print(missedDates[0])
     if len(missedDates) > 0:
-        butFirstGetMissedDates(missedDates, outputFile, forbiddenCount, dataFilePath, dataFilename)
-    outputFile.close()
+        print(missedDates[0])
+        butFirstGetMissedDates(missedDates, forbiddenCount, dataFilePath, dataFilename)
+
 
 if __name__ == "__main__":
     main()

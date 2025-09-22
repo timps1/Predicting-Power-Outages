@@ -1,0 +1,62 @@
+Here is a guide to run in order:
+
+----------
+1. Create a seperate file for one wfo
+Update "wfoOfInterest" to wfo you are collecting for
+
+>> python File_Dates.py <path_to + wwa_eagle.csv>
+
+Will save "wfoOfInterest"_wwa.csv
+
+-----------
+2. Webscraping Weather info
+
+Find link and change "url"
+Update "wfoTag"
+
+>> python WebScrapeAklWeatherV2.py <path_to + "wfoOfInterest"_wwa.csv> <folder_to_save_all_weather_data[DEFAULT=CURRENT]>
+
+If website forbids either restart, wait awhile or join new wifi or all of them and run the same line again.
+It will check the folder and see which dates have been missed
+
+----------
+3. Create data points
+Update "wfoTag"
+
+>> python CreateDataPoints.py <path_to + "wfoOfInterest"_wwa.csv> <folder_to_save_all_weather_data[DEFAULT=CURRENT]> <wfo>
+
+Saves a file at the same location as <path_to + "wfoOfInterest"_wwa.csv> named "wfoOfInterest"_Training_Data.csv
+
+---------
+4. Clean the data
+
+>> python Data\ Cleaning.py <path_to + "wfoOfInterest"_Training_Data.csv> 
+
+Saves a file at the same location as <path_to + "wfoOfInterest"_Training_Data.csv> named "wfoOfInterest"_Training_Data_clean.csv
+
+--------
+5. Normailse Data
+
+>> python NormaliseData.py <path_to + "wfoOfInterest"_Training_Data_clean.csv> 
+
+Saves a file at the same location as <path_to + "wfoOfInterest"_Training_Data_clean.csv> named "wfoOfInterest"_Training_Data_clean_normalised.csv
+
+
+
+
+########################################
+Alternative to steps 3->5 
+
+Update Bash file:
+    wfoOfInterest="HFO"   # <-- Change this to your WFO of interest
+    path_to="../"         # <-- Change this to the path containing your *_wwa.csv
+    weather_data_folder="." # Default folder to save weather data (CURRENT DIR)
+
+Convert to executable - If you struggle here use ChatGPT
+
+Linux/macOS: chmod +x run_datacollectionpipeline.sh && ./run_datacollectionpipeline.sh
+Windows: Use WSL or Git Bash to run .sh directly. Otherwise, convert/wrap it into .bat or PowerShell.
+
+Run executable
+
+./run_datacollectionpipeline.sh
