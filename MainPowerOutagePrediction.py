@@ -9,7 +9,7 @@ from sklearn import metrics
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LogisticRegression
-# from Models.LSTMModelFile import LSTMModel
+from Models.LSTMModelFile import LSTMEstimator
 import pandas as pd
 from xgboost import XGBClassifier
 
@@ -35,7 +35,7 @@ def newMethodUsingGridSearchCV(X, y):
                                   max_depth=18,
                                   subsample = 1,
                                   random_state=42,
-                                  use_label_encoder=False))
+                                  use_label_encoder=False))         
         ]
     
     cv_outer = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
@@ -79,6 +79,14 @@ def newMethodUsingGridSearchCV(X, y):
 
 
 def oldMethodOfCrossValidation(X, y):
+
+    lstm_params = {"lstm_units": 64, 
+                   "dropout": 0.5, 
+                   "lr": 5e-4, 
+                   "batch_size": 32}
+    
+    lstm_model = LSTMEstimator(**lstm_params)  # Placeholder for LSTM model instance
+
     baseLearners = [
             ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
 
@@ -86,8 +94,8 @@ def oldMethodOfCrossValidation(X, y):
 
             ('knn', KNeighborsClassifier(n_neighbors=4, 
                                             weights='distance', 
-                                            metric='manhattan'))
-
+                                            metric='manhattan')),
+            ('lstm', lstm_model)
         ]
     
     parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True}
