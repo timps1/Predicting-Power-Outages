@@ -2,6 +2,7 @@ import pandas as pd
 import html
 import re
 import sys
+import 
 
 # 1) Load data
 df = pd.read_csv(sys.argv[1])
@@ -44,13 +45,7 @@ df["Wind Direction"] = pd.to_numeric(
 if "Visibility" in df.columns:
     df = df.drop(columns=["Visibility"])
 
-# 7) Weather: keep only the primary label (before first '.') and encode to numbers,
-#    but in the final dataset keep ONLY the numeric codes in column 'Weather'.
-def primary_weather(w):
-    if pd.isna(w):
-        return pd.NA
-    w = normalize_text(w)
-    return w.split(".", 1)[0].strip()
+
 
 # temporary text column
 df["_WeatherText"] = df["Weather"].apply(primary_weather)
