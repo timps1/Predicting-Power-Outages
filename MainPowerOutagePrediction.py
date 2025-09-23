@@ -26,16 +26,18 @@ def newMethodUsingGridSearchCV(X, y):
 
             ('svc', SVC(kernel='rbf', C=20, probability=True)),
 
-            ('knn', KNeighborsClassifier(n_neighbors=4, 
+            ('knn', KNeighborsClassifier(n_neighbors=2, 
                                             weights='distance', 
-                                            metric='manhattan')),
+                                            metric='manhattan'
+                                            )),
 
             ('xgb', XGBClassifier(learning_rate = 0.1,
                                   gamma=0, 
                                   max_depth=18,
                                   subsample = 1,
                                   random_state=42,
-                                  use_label_encoder=False))         
+                                  use_label_encoder=False
+                                  ))         
         ]
     
     cv_outer = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
@@ -85,18 +87,43 @@ def oldMethodOfCrossValidation(X, y):
                    "lr": 5e-4, 
                    "batch_size": 32}
     
-    lstm_model = LSTMEstimator(**lstm_params)  # Placeholder for LSTM model instance
+    rf_params = {
+        "n_estimators": 400,
+        "random_state": 42,
+        "n_jobs": -1
+    }
 
+    svm_params = {
+        "kernel": "rbf",
+        "C": 20,
+        "probability": True
+    }
+
+    knn_params = {
+        "n_neighbors": 2,
+        "weights": "distance",
+        "metric": "manhattan"
+    }
+
+    xgb_params = {
+        "learning_rate": 0.1,
+        "gamma": 0.01,
+        "max_depth": 15,
+        "n_estimators": 38,
+        "subsample": 1,
+        "random_state": 42,
+        "n_jobs": -1
+    }
+
+    baseLearnerParams = [rf_params, svm_params, knn_params, xgb_params]
+
+    # Base learners
     baseLearners = [
-            ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
-
-            ('svc', SVC(kernel='rbf', C=20, probability=True)),
-
-            ('knn', KNeighborsClassifier(n_neighbors=4, 
-                                            weights='distance', 
-                                            metric='manhattan')),
-            # ('lstm', lstm_model)
-        ]
+        ('rf', RandomForestClassifier(**rf_params)),
+        ('svc', SVC(**svm_params)),
+        ('knn', KNeighborsClassifier(**knn_params)),
+        ('xgb', XGBClassifier(**xgb_params)),
+    ]
     
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     
@@ -107,9 +134,13 @@ def oldMethodOfCrossValidation(X, y):
                                                             max_depth=30,
                                                             min_samples_leaf=1,
                                                             min_samples_split=2,
+                                                            random_state=42,
                                                             n_estimators=300), 
                     'passthrough': True, 
-                    'cv': cv_inner}
+                    'cv': cv_inner,
+                    'n_jobs' : -1,
+                    'verbose' : 1
+                    }
 
     modelClassParameterList = [StackingClassifier(**parameters)]
 
@@ -120,6 +151,10 @@ def oldMethodOfCrossValidation(X, y):
 
     modelsList = []
     current_model_type = None
+
+    for i, learner in enumerate(baseLearners):
+        print(learner[0].upper())
+        print("PARAMETERS :", baseLearnerParams[i])
 
     for i, model in enumerate(modelClassParameterList):
 
