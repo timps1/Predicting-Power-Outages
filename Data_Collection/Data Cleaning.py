@@ -4,11 +4,8 @@ import re
 import sys
 import UniqueSetOfConditions as usc
 import re
+import os
 
-# 1) Load data
-df = pd.read_csv(sys.argv[1])
-
-# ---------- Helpers ----------
 def normalize_text(s):
     """Decode HTML (&nbsp;), normalize whitespaces, and trim."""
     if pd.isna(s):
@@ -24,29 +21,6 @@ def extract_number(text, pattern=r"(-?\d+(?:\.\d+)?)"):
         return pd.NA
     m = re.search(pattern, str(text))
     return float(m.group(1)) if m else pd.NA
-
-# 2) Normalize all object columns
-obj_cols = df.select_dtypes(include="object").columns
-for c in obj_cols:
-    df[c] = df[c].apply(normalize_text)
-
-# 3) Temp -> numeric (°C)
-df["Temp"] = pd.to_numeric(df["Temp"].apply(lambda x: extract_number(x)), errors="coerce")
-
-# 4) Wind Speed -> numeric (km/h)
-df["Wind Speed"] = pd.to_numeric(df["Wind Speed"].apply(lambda x: extract_number(x)), errors="coerce")
-
-# 5) Wind Direction -> angle only (degrees)
-df["Wind Direction"] = pd.to_numeric(
-    df["Wind Direction"].apply(lambda x: extract_number(x, pattern=r"(\d+(?:\.\d+)?)\s*°")),
-    errors="coerce"
-)
-
-# 6) Drop Visibility if present
-if "Visibility" in df.columns:
-    df = df.drop(columns=["Visibility"])
-
-# 7) Weather discriptions
 
 def addRainValue(df, columnName):
     rainKeyWordsDict = {
@@ -107,31 +81,87 @@ def addDiscriptiveInfo(df, columnName):
     addHailValue(df, columnName)
     addThunderValue(df, columnName)
 
-usc.addDiscriptiveInfo(df, "Weather")
+def cleanOneFile(filename, filePath, nextFilePath):
+    # 1) Load data
+    df = pd.read_csv(filePath + filename)
 
-df = df.drop(columns='Weather')
+    # ---------- Helpers ----------
 
-df_temp_col_time = df["Time"]
+    # 2) Normalize all object columns
+    obj_cols = df.select_dtypes(include="object").columns
+    for c in obj_cols:
+        df[c] = df[c].apply(normalize_text)
 
-df = df.drop(columns='Time')
+    # 3) Temp -> numeric (°C)
+    df["Temp"] = pd.to_numeric(df["Temp"].apply(lambda x: extract_number(x)), errors="coerce")
 
-df = df.replace(r'[^0-9\.-]', '', regex=True)
+    # 4) Wind Speed -> numeric (km/h)
+    df["Wind Speed"] = pd.to_numeric(df["Wind Speed"].apply(lambda x: extract_number(x)), errors="coerce")
 
-df = df.apply(pd.to_numeric, errors='coerce')
+    # 5) Wind Direction -> angle only (degrees)
+    df["Wind Direction"] = pd.to_numeric(
+        df["Wind Direction"].apply(lambda x: extract_number(x, pattern=r"(\d+(?:\.\d+)?)\s*°")),
+        errors="coerce"
+    )
 
-df["Humidity"] = df["Humidity"] / 100
+    # 6) Drop Visibility if present
+    if "Visibility" in df.columns:
+        df = df.drop(columns=["Visibility"])
 
-match = re.match(r"^\d{1,2}:\d{2}\s[ap]\.m\.", df_temp_col_time[0])
-if match:
-    df_temp_col_time = match.group(0)
+    # 7) Weather discriptions
+
+    addDiscriptiveInfo(df, "Weather")
+
+    df = df.drop(columns='Weather')
+
+    df_temp_col_time = df["Time"]
+
+    df = df.drop(columns='Time')
+
+    df = df.replace(r'[^0-9\.-]', '', regex=True)
+
+    df = df.apply(pd.to_numeric, errors='coerce')
+
+    df = df.fillna(0.0)
+
+    df["Humidity"] = df["Humidity"] / 100
+
+    match = re.match(r"^\d{1,2}:\d{2}\s[ap]\.m\.", df_temp_col_time[0])
+    if match:
+        df_temp_col_time[0] = match.group(0)
 
 
-df["Time"] = df_temp_col_time
+    df["Time"] = df_temp_col_time
 
-# Save cleaned dataset — 'Weather' is numeric-only
-dotIndex = sys.argv[1].rfind(".")
-nexFilename = sys.argv[1][:dotIndex] + "_clean" + ".csv"
-df.to_csv(nexFilename, index=False)
+    # Save cleaned dataset — 'Weather' is numeric-only
+    dotIndex = filename.rfind(".")
+    nexFilename = nextFilePath + "/" + filename[:dotIndex] + "_clean" + ".csv"
+    df.to_csv(nexFilename, index=False)
 
-print("File Saved to:", nexFilename)
-# print(df["Weather"])
+    print("File Saved to:", nexFilename)
+    # print(df["Weather"])
+
+def main():
+    # Folder with saved data:
+    folderWithFiles = sys.argv[1]
+    if folderWithFiles[-1] != "/":
+        folderWithFiles += "/"
+
+    listOfFiles = os.listdir(folderWithFiles)
+
+    wfo = sys.argv[2]
+
+    cleanedFolder = folderWithFiles + f"/{wfo.upper()}_cleaned"
+
+    if not os.path.isdir(cleanedFolder):
+        os.mkdir(cleanedFolder)
+    
+    for file in listOfFiles:
+        if f"{wfo.lower()}_weather_" not in file:
+            continue
+        elif not os.path.exists(cleanedFolder + "/" + file[:file.rfind(".")] + "_clean" + ".csv"):
+            cleanOneFile(file, folderWithFiles, cleanedFolder)
+
+
+if __name__ == "__main__":
+    main()

@@ -3,49 +3,49 @@
 # ==============================
 # Configurable variables
 # ==============================
-wfoOfInterest="HFO"   # <-- Change this to your WFO of interest
-path_to="../"         # <-- Change this to the path containing your *_wwa.csv
-weather_data_folder="." # Default folder to save weather data (CURRENT DIR)
+wfoOfInterest="HFO"         # <-- Change this to your WFO of interest
+path_to="../../Weather_Data/"               # <-- Path containing {hfo}_wwa.csv
+weather_data_folder="../../Weather_Data/HFO/"      # Folder where all weather data CSVs are saved
 
 # ==============================
-# Derived file paths
+# Step 3: Clean the data
 # ==============================
-wwa_file="${path_to}${wfoOfInterest}_wwa.csv"
-training_file="${path_to}${wfoOfInterest}_Training_Data.csv"
-clean_file="${path_to}${wfoOfInterest}_Training_Data_clean.csv"
-normalised_file="${path_to}${wfoOfInterest}_Training_Data_clean_normalised.csv"
-
-# ==============================
-# Step 3: Create data points
-# ==============================
-echo ">>> Step 3: Creating data points for $wfoOfInterest..."
-python CreateDataPoints.py "$wwa_file" "$weather_data_folder" "$wfoOfInterest"
-if [ $? -ne 0 ]; then
-    echo "Error in CreateDataPoints.py"
-    exit 1
-fi
-echo "Saved training file: $training_file"
-
-# ==============================
-# Step 4: Clean the data
-# ==============================
-echo ">>> Step 4: Cleaning data..."
-python "Data Cleaning.py" "$training_file"
+echo ">>> Step 3: Cleaning all weather data for $wfoOfInterest..."
+python "Data Cleaning.py" "$weather_data_folder" "$wfoOfInterest"
 if [ $? -ne 0 ]; then
     echo "Error in Data Cleaning.py"
     exit 1
 fi
-echo "Saved cleaned file: $clean_file"
+
+cleaned_folder="${weather_data_folder}/${wfoOfInterest}_cleaned"
+echo "Cleaned files saved in: $cleaned_folder"
+
+# ==============================
+# Step 4: Create data points
+# ==============================
+wwa_file="${path_to}${wfoOfInterest}_wwa.csv"
+training_file="${path_to}${wfoOfInterest}_Training_Data.csv"
+
+echo ">>> Step 4: Creating training data points..."
+python "CreateDataPoints.py" "$wwa_file" "$cleaned_folder" "$wfoOfInterest"
+if [ $? -ne 0 ]; then
+    echo "Error in CreateDataPoints.py"
+    exit 1
+fi
+echo "Training data saved at: $training_file"
 
 # ==============================
 # Step 5: Normalise the data
 # ==============================
-echo ">>> Step 5: Normalising data..."
-python NormaliseData.py "$clean_file"
+clean_file="${path_to}${wfoOfInterest}_Training_Data.csv"
+normalised_file="${path_to}${wfoOfInterest}_Training_Data_normalised.csv"
+
+echo ">>> Step 5: Normalising training data..."
+python "NormaliseData.py" "$clean_file"
 if [ $? -ne 0 ]; then
     echo "Error in NormaliseData.py"
     exit 1
 fi
-echo "Saved normalised file: $normalised_file"
+echo "Normalised file saved at: $normalised_file"
 
-echo ">>> All steps completed successfully!"
+echo ">>> Pipeline completed successfully!"

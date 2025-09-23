@@ -2,44 +2,46 @@ Here is a guide to run in order:
 
 ----------
 1. Create a seperate file for one wfo
-Update "wfoOfInterest" to wfo you are collecting for
 
->> python File_Dates.py <path_to + wwa_eagle.csv>
+>> python Find_Dates.py <path_to + wwa_with_outages.csv> <wfo>
+e.g. python Find_Dates.py ../../Weather_Data/wwa_with_outages.csv hfo
 
-Will save "wfoOfInterest"_wwa.csv
+Will save "wfoOfInterest"_wwa.csv at same location as <path_to + wwa_with_outages.csv>
 
 -----------
 2. Webscraping Weather info
 
 Find link and change "url"
-Update "wfoTag"
 
->> python WebScrapeAklWeatherV2.py <path_to + "wfoOfInterest"_wwa.csv> <folder_to_save_all_weather_data[DEFAULT=CURRENT]>
+>> python WebScrapeAklWeatherV2.py <path_to + "wfoOfInterest"_wwa.csv> <folder_to_save_all_weather_data> <wfo>
+
+e.g. python WebScrapeAklWeatherV2.py ../../Weather_Data/HFO_wwa.csv ../../Weather_Data/HFO  hfo
 
 If website forbids either restart, wait awhile or join new wifi or all of them and run the same line again.
-It will check the folder and see which dates have been missed
-
-----------
-3. Create data points
-Update "wfoTag"
-
->> python CreateDataPoints.py <path_to + "wfoOfInterest"_wwa.csv> <folder_to_save_all_weather_data[DEFAULT=CURRENT]> <wfo>
-
-Saves a file at the same location as <path_to + "wfoOfInterest"_wwa.csv> named "wfoOfInterest"_Training_Data.csv
+It will check the folder and see which dates have been missed.
 
 ---------
-4. Clean the data
+3. Clean the data
 
->> python Data\ Cleaning.py <path_to + "wfoOfInterest"_Training_Data.csv> 
+>> python Data\ Cleaning.py <folder_with__all_weather_data_saved> <wfo>
 
-Saves a file at the same location as <path_to + "wfoOfInterest"_Training_Data.csv> named "wfoOfInterest"_Training_Data_clean.csv
+Saves a file at the same location as <path_to + "wfoOfInterest"_Training_Data.csv> in subfolder named "wfoOfInterest"_clean
+Each file is saved as "same_name"_clean.csv
+
+----------
+4. Create data points
+Update "wfoTag"
+
+>> python CreateDataPoints.py <path_to + "wfoOfInterest"_wwa.csv> <Folder_Where_all_clean_data> <wfo>
+
+Saves a file at the same location as <path_to + "wfoOfInterest"_wwa.csv> named "wfoOfInterest"_Training_Data.csv
 
 --------
 5. Normailse Data
 
->> python NormaliseData.py <path_to + "wfoOfInterest"_Training_Data_clean.csv> 
+>> python NormaliseData.py <path_to + "wfoOfInterest"_Training_Data.csv> 
 
-Saves a file at the same location as <path_to + "wfoOfInterest"_Training_Data_clean.csv> named "wfoOfInterest"_Training_Data_clean_normalised.csv
+Saves a file at the same location as <path_to + "wfoOfInterest"_Training_Data.csv> named "wfoOfInterest"_Training_Data_normalised.csv
 
 
 

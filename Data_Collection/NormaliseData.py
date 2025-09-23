@@ -22,6 +22,7 @@ def normalizeDataByColumn(data, methodLabel='zero_to_one'):
         elif "Humidity" in columnName:  # Skip Humidity columns
             continue
         elif "Time" in columnName:
+            data = data.drop("columnName")
             continue
         elif methodLabel == 'zero_to_one':
             normalizeDataZeroToOne(data, columnName)

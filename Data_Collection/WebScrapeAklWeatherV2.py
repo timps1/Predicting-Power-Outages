@@ -71,52 +71,6 @@ def butFirstGetMissedDates(missedDates, forbiddenCount, dataFilePath, dataFilena
             print("Too many forbidden requests, stopping the script.")
             break
 
-
-def cycleThroughDates(forbiddenCount):
-
-    startYear, endYear = 2023, 2025
-    startMonth, endMonth = 1, 12
-    startDay, endDay = 1, 31
-    for year in range(startYear, endYear+1):
-
-        strYear = str(year)
-
-        for month in range(startMonth, endMonth+1):
-
-            strMonth = str(month)
-            if month < 10:
-                strMonth = "0" + strMonth
-            
-            for day in range(startDay,endDay+1):
-                if month == 2 and day > 28:
-                    if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):  # Leap year check
-                        if day > 29:
-                            continue
-                    else:
-                        continue
-                elif month in [4, 6, 9, 11] and day > 30:
-                    continue
-
-                strDay = str(day)
-                if day < 10:
-                    strDay = "0" + strDay
-                print(f"{strDay}/{strMonth}/{strYear}", end= " ")
-                try:
-                    webScrapADay(strDay,strMonth,strYear)
-                except Exception as e:
-                    print("FAILED", e)
-                    if "403" in str(e):
-                        forbiddenCount += 1
-            
-            startDay = 1  # Reset day to 1 after the first month
-            if forbiddenCount > 10:
-                break
-        
-        startMonth = 1  # Reset month to January after the first year
-        if forbiddenCount > 10:
-            print("Too many forbidden requests, stopping the script.")
-            break
-
 def organiseDates():
     
     df = pd.read_csv(sys.argv[1])
@@ -149,18 +103,10 @@ def organiseDates():
         
 def checkMissingDates(missedDates, dataFilePath, dataFilename):
     listOfFiles = os.listdir(dataFilePath)
-    happened = False
     for i in range(len(missedDates)-1,-1,-1):
         searchDate = missedDates[i]
         dateStr = "_".join(searchDate) + ".csv"
-        if not happened:
-                print(searchDate)
-                print(dataFilename + dateStr)
-                print(listOfFiles[0])
-                happened = True
         if dataFilename + dateStr in listOfFiles:
-            if not happened:
-                print("Works!!!!!")
             missedDates.pop(i)
 
 
@@ -168,12 +114,14 @@ def main():
     if len(sys.argv) < 2:
         print("MISSING INPUT IN CMD LINE")
         sys.exit(1)
-    elif len(sys.argv) == 2:
-        dataFilePath = "."
-    else:
-        dataFilePath = sys.argv[2]
-    
-    wfoTag = "hfo"
+    dataFilePath = sys.argv[2]
+    if not os.path.isdir(dataFilePath):
+        os.mkdir(dataFilePath)
+        print("Created Directory at", dataFilePath)
+    if dataFilePath[-1] != "/":
+        dataFilePath += "/"
+
+    wfoTag = sys.argv[3]
 
     dataFilename = f"{wfoTag.lower()}_weather_"
     forbiddenCount = 0
@@ -181,8 +129,9 @@ def main():
         print("MISSING INPUT IN CMD LINE")
         sys.exit(1)
     missedDates = organiseDates()
+    print("Number of Dates:", len(missedDates))
     checkMissingDates(missedDates, dataFilePath, dataFilename)
-    print("Number of dates:", len(missedDates))
+    print("Number of Dates to go:", len(missedDates))
     if len(missedDates) > 0:
         print(missedDates[0])
         butFirstGetMissedDates(missedDates, forbiddenCount, dataFilePath, dataFilename)

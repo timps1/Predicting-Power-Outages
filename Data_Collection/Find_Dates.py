@@ -11,7 +11,7 @@ print(sys.argv[1])
 
 df = pd.read_csv(sys.argv[1])
 
-wfoOfInterest = "HFO"
+wfoOfInterest = sys.argv[2].upper()
 
 dfSOI = df[(df["wfo"] == wfoOfInterest) & (~df["phenom"].isin(excludeTags))]
 
