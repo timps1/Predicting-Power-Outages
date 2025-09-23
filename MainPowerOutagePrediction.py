@@ -9,7 +9,7 @@ from sklearn import metrics
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LogisticRegression
-from Models.LSTMModelFile import LSTMEstimator
+# from Models.LSTMModelFile import LSTMEstimator
 import pandas as pd
 from xgboost import XGBClassifier
 
@@ -95,7 +95,7 @@ def oldMethodOfCrossValidation(X, y):
             ('knn', KNeighborsClassifier(n_neighbors=4, 
                                             weights='distance', 
                                             metric='manhattan')),
-            ('lstm', lstm_model)
+            # ('lstm', lstm_model)
         ]
     
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
