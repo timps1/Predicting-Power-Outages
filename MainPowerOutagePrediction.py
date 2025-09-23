@@ -82,32 +82,35 @@ def oldMethodOfCrossValidation(X, y):
     baseLearners = [
             ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
 
-            ('svc', SVC(kernel='rbf', C=60)),
+            ('svc', SVC(kernel='rbf', C=20, probability=True)),
 
             ('knn', KNeighborsClassifier(n_neighbors=4, 
                                             weights='distance', 
-                                            metric='manhattan'))
+                                            metric='manhattan')),
 
+            ('xgb', XGBClassifier(learning_rate = 0.5,
+                                  gamma=0, 
+                                  max_depth=18,
+                                  subsample = 1,
+                                  random_state=42)),
         ]
     
-    parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True}
+    cv_outer = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    
+    cv_inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+    parameters = {'estimators': baseLearners, 
+                  'final_estimator': RandomForestClassifier(bootstrap=False, 
+                                                            max_depth=30,
+                                                            min_samples_leaf=1,
+                                                            min_samples_split=2,
+                                                            n_estimators=300), 
+                    'passthrough': True, 
+                    'cv': cv_inner}
 
     modelClassParameterList = [StackingClassifier(**parameters)]
 
-    parameters_list = [
-        {'n_neighbors' : 4, "weights" : 'distance', "metric" : 'manhattan'}, #KNN_parameters
-        {'kernel' : 'rbf', 'C' : 60}, #SVM_parameters
-        {'n_estimators' : 400, 'random_state' : 42}, #RF_parameters
-        {'learning_rate' : 0.1, 'n_estimators' : 100, 'max_depth' : 20}, #XGB_parameters
-        # {"lstm_units": 64, "dropout": 0.5, "lr": 5e-4, "batch_size": 32}  #LSTM_parameters
-    ]
-    modelClassParameterList = [
-        
-        KNeighborsClassifier(**parameters_list[0]),
-        SVC(**parameters_list[1]),
-        RandomForestClassifier(**parameters_list[2]),
-        # LSTMModel(**parameters_list[4])
-    ]
+    parameters_list = [parameters]
 
     # Cross-validation
     cross_validator = CrossValidation.CrossValidator(n_splits=10, storeResults=True)
@@ -124,7 +127,8 @@ def oldMethodOfCrossValidation(X, y):
             current_model_type = model.__class__.__name__
             cross_validator.reset()  # Reset cross-validator for new model type
 
-        model = sklearnModel(model=model, parameters=parameters_list[i] if i < len(parameters_list) else {})
+        adict = {}
+        model = sklearnModel(model=model, parameters= adict)
         print(f"------------------------------------------------------------")
         print(f"Model {i}: {model.getModelInfo()}")
 
@@ -169,9 +173,9 @@ def main():
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
-    newMethodUsingGridSearchCV(X, y)
+    # newMethodUsingGridSearchCV(X, y)
 
-    # oldMethodOfCrossValidation(X, y)
+    oldMethodOfCrossValidation(X, y)
 
 
     
