@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import os
 
 def webScrapADay(day,month,year, dataFilePath, dataFilename):
-    url = f"https://www.timeanddate.com/scripts/cityajax.php?n=usa/aberdeen&mode=historic&hd={year}{month}{day}&month={month}&year={year}&json=1"
+    url = f"https://www.timeanddate.com/scripts/cityajax.php?n=usa/dallas&mode=historic&hd={year}{month}{day}&month={month}&year={year}&json=1"
 
     response = requests.get(url)
     response.raise_for_status()
