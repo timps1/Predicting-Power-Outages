@@ -41,7 +41,8 @@ for i in range(len(wwadf["issued"])):
             df2 = None
     except Exception as e:
         print("Failed for weather:", i)
-        print("ERROR:", e)
+        print("Likely missing weather data")
+        print("ERROR:", str(e)[:100], ".....")
         continue
 
     # parse times
