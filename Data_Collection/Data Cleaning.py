@@ -160,7 +160,11 @@ def main():
         if f"{wfo.lower()}_weather_" not in file:
             continue
         elif not os.path.exists(cleanedFolder + "/" + file[:file.rfind(".")] + "_clean" + ".csv"):
-            cleanOneFile(file, folderWithFiles, cleanedFolder)
+            try:
+                cleanOneFile(file, folderWithFiles, cleanedFolder)
+            except Exception as e:
+                print(file)
+                print("ERROR:", str(e)[:100], ".....")
 
 
 if __name__ == "__main__":

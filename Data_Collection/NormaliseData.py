@@ -22,8 +22,10 @@ def normalizeDataByColumn(data, methodLabel='zero_to_one'):
         elif "Humidity" in columnName:  # Skip Humidity columns
             continue
         elif "Time" in columnName:
-            data = data.drop("columnName")
+            data = data.drop(columns = columnName)
             continue
+        elif "Rain" in columnName:
+            data[columnName] = data[columnName] / 5
         elif methodLabel == 'zero_to_one':
             normalizeDataZeroToOne(data, columnName)
         elif methodLabel == 'minus_one_to_one':
