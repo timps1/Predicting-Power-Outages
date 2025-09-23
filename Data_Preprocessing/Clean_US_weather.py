@@ -15,9 +15,7 @@ main_df = pd.DataFrame()
 
 for file in glob.glob(os.path.join(data_path, 'wwa_*.csv')):
     print(f"Processing file: {file}")
-
-
-
+    
     df = pd.read_csv(file,
                         usecols=["WFO",
                             "ISSUED",
