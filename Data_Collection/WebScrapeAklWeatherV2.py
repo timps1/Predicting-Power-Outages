@@ -1,3 +1,4 @@
+import random
 import requests
 import json5
 import pandas as pd
@@ -6,11 +7,18 @@ import time
 import sys
 from datetime import datetime, timedelta
 import os
+# from requests_ip_rotator import ApiGateway
 
-def webScrapADay(day,month,year, dataFilePath, dataFilename):
+def webScrapADay(day,month,year, dataFilePath, dataFilename, session):
     url = f"https://www.timeanddate.com/scripts/cityajax.php?n=usa/dallas&mode=historic&hd={year}{month}{day}&month={month}&year={year}&json=1"
 
-    response = requests.get(url)
+
+
+
+    response = session.get(url)
+
+
+
     response.raise_for_status()
     data_json = json5.loads(response.text)  # Use json5 instead of response.json()
 
@@ -59,17 +67,19 @@ def webScrapADay(day,month,year, dataFilePath, dataFilename):
 
 def butFirstGetMissedDates(missedDates, forbiddenCount, dataFilePath, dataFilename):
 
-    for strDay, strMonth, strYear in missedDates:
-        print(f"{strDay}/{strMonth}/{strYear}", end= " ")
-        try:
-            webScrapADay(strDay, strMonth, strYear, dataFilePath, dataFilename)
-        except Exception as e:
-            print(f"Failed to scrape {strDay}/{strMonth}/{strYear}: {e}")
-            if "403" in str(e):
-                forbiddenCount += 1
-        if forbiddenCount > 10:
-            print("Too many forbidden requests, stopping the script.")
-            break
+    with requests.Session() as session:
+        for strDay, strMonth, strYear in missedDates:
+            # time.sleep(random.random())
+            print(f"{strDay}/{strMonth}/{strYear}", end= " ")
+            try:
+                webScrapADay(strDay, strMonth, strYear, dataFilePath, dataFilename, session)
+            except Exception as e:
+                print(f"Failed to scrape {strDay}/{strMonth}/{strYear}: {e}")
+                if "403" in str(e):
+                    forbiddenCount += 1
+            if forbiddenCount > 10:
+                print("Too many forbidden requests, stopping the script.")
+                break
 
 def organiseDates():
     
