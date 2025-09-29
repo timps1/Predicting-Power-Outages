@@ -1,22 +1,27 @@
 import sys
 import pandas as pd
 
-excludeTags = ["SU", "HY"]
+def main(wfoOfInterest, filePath):
+    excludeTags = ["SU", "HY"]
 
-if len(sys.argv) < 2:
-    print("Missing inputs")
-    sys.exit(1)
+    df = pd.read_csv(filePath)
 
-print(sys.argv[1])
+    dfSOI = df[(df["wfo"] == wfoOfInterest) & (~df["phenom"].isin(excludeTags))]
 
-df = pd.read_csv(sys.argv[1])
+    print(dfSOI)
 
-wfoOfInterest = sys.argv[2].upper()
+    slashIndex = filePath.rfind("/")
+    nexFilename = filePath[:slashIndex+1] + wfoOfInterest.upper() + "_wwa.csv"
+    dfSOI.to_csv(nexFilename)
 
-dfSOI = df[(df["wfo"] == wfoOfInterest) & (~df["phenom"].isin(excludeTags))]
+    print("Extracted :", wfoOfInterest, "| Saving to :", nexFilename)
 
-print(dfSOI)
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Missing inputs")
+        sys.exit(1)
 
-slashIndex = sys.argv[1].rfind("/")
-nexFilename = sys.argv[1][:slashIndex+1] + wfoOfInterest.upper() + "_wwa.csv"
-dfSOI.to_csv(nexFilename)
+    filePath = sys.argv[1]
+
+    wfoOfInterest = sys.argv[2].upper()
+    main(wfoOfInterest, filePath)
