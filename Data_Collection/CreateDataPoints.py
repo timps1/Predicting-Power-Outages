@@ -1,5 +1,6 @@
 import sys
 import pandas as pd
+import numpy as np
 import os
 from datetime import datetime, timedelta
 
@@ -86,16 +87,21 @@ for i in range(len(wwadf["issued"])):
         for t in range(24):  # 0 through 24 hours
             for col in base_cols:
                 final_columns.append(f"{col}_{t}")
+        final_columns.append('outage_flag')
         columns_built = True
 
     if len(daySpanDataPoint) == 24 * len(examplerow):
+        daySpanDataPoint += [wwadf['outage_flag'][i]]
         results.append(daySpanDataPoint)
+    else:
+        print(len(daySpanDataPoint))
 
     length = len(wwadf["issued"])
     if i % max(length // 10, 1) == 0:  # print every 10% of progress
         print(f"{(i / length) * 100:.0f}%")
 
 # build final DataFrame
+print("Size of DF:", len(results))
 training_df = pd.DataFrame(results, columns=final_columns)
 
 cols_to_remove = ["Time_0", "Time_1", "Time_2", "Time_3"]  # your list here

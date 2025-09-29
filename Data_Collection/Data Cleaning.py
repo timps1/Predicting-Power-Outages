@@ -50,10 +50,14 @@ def addRainValue(df, columnName):
 
     # Initialize column with 0
     df["RainValue"] = 0
+    df["RainValue"] = df["RainValue"].astype(float)
 
     # Assign values based on keywords
     for phrase, score in rainKeyWordsDict.items():
-        df.loc[df[columnName].str.contains(phrase, case=False, na=False), "RainValue"] = score
+        df.loc[
+            df[columnName].astype(str).str.contains(phrase, case=False, na=False),
+            "RainValue"
+        ] = score
 
     return df
 
@@ -164,7 +168,7 @@ def main():
                 cleanOneFile(file, folderWithFiles, cleanedFolder)
             except Exception as e:
                 print(file)
-                print("ERROR:", str(e)[:100], ".....")
+                print("ERROR:", str(e))
 
 
 if __name__ == "__main__":
