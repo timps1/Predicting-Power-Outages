@@ -46,12 +46,17 @@ def newMethodUsingGridSearchCV(X, y):
 
     parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True, 'cv': cv_inner}
 
-    modelClassParameterList = [SVC()]
+    modelClassParameterList = [SVC(), KNeighborsClassifier()]
     
     parameter_grid_list = [
         {
-            'C': [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-            'kernel': ['poly'],
+            'C': [10, 20, 30, 40, 50, 60],
+            'kernel': ['rbf'],
+        },
+        {
+            "n_neighbors":[1,2,3,4,5], 
+            "weights":['distance', "uniform"], 
+            "metric":['manhattan', "euclidean"]
         }
     ]
     
@@ -211,9 +216,9 @@ def main():
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
-    # newMethodUsingGridSearchCV(X, y)
+    newMethodUsingGridSearchCV(X, y)
 
-    oldMethodOfCrossValidation(X, y)
+    # oldMethodOfCrossValidation(X, y)
 
 
     
