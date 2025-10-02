@@ -18,7 +18,12 @@ def newMethodUsingGridSearchCV(X, y):
 
     scoring = {
         "accuracy": metrics.make_scorer(metrics.accuracy_score),
-        "f1": metrics.make_scorer(metrics.f1_score)
+        "f1": metrics.make_scorer(metrics.f1_score),
+        'f1_weighted': metrics.make_scorer(metrics.f1_score),
+        "precision" : metrics.make_scorer(metrics.precision_score),
+        "recall" : metrics.make_scorer(metrics.recall_score),
+        "roc_auc" : metrics.make_scorer(metrics.roc_auc_score),
+        "r2" : metrics.make_scorer(metrics.r2_score)
     }
 
     baseLearners = [
@@ -46,17 +51,22 @@ def newMethodUsingGridSearchCV(X, y):
 
     parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True, 'cv': cv_inner}
 
-    modelClassParameterList = [SVC(), KNeighborsClassifier()]
+    modelClassParameterList = [RandomForestClassifier()]
     
     parameter_grid_list = [
+        # {
+        #     'C': [10, 20, 30, 40, 50, 60],
+        #     'kernel': ['rbf'],
+        # },
+        # {
+        #     "n_neighbors":[1,2,3,4,5], 
+        #     "weights":['distance', "uniform"], 
+        #     "metric":['manhattan', "euclidean"]
+        # },
         {
-            'C': [10, 20, 30, 40, 50, 60],
-            'kernel': ['rbf'],
-        },
-        {
-            "n_neighbors":[1,2,3,4,5], 
-            "weights":['distance', "uniform"], 
-            "metric":['manhattan', "euclidean"]
+            "n_estimators": [300, 400],
+            "random_state": [42],
+            "n_jobs": [-1]
         }
     ]
     
@@ -82,6 +92,10 @@ def newMethodUsingGridSearchCV(X, y):
         
         results_df = pd.DataFrame(grid.cv_results_)
         results_df.to_csv(f'GridSearchCV_Results({model.__class__.__name__}).csv', index=False)
+        for col in results_df.columns:
+            if "mean" not in col:
+                results_df = results_df.drop(columns=col)
+        print(results_df)
         print(f"Grid search results saved to GridSearchCV_Results({model.__class__.__name__}).csv")
 
 
@@ -93,7 +107,7 @@ def oldMethodOfCrossValidation(X, y):
                    "batch_size": 32}
     
     rf_params = {
-        "n_estimators": 400,
+        "n_estimators": 300,
         "random_state": 42,
         "n_jobs": -1
     }
@@ -147,9 +161,9 @@ def oldMethodOfCrossValidation(X, y):
                     'verbose' : 1
                     }
 
-    modelClassParameterList = [StackingClassifier(**parameters)]
+    modelClassParameterList = [RandomForestClassifier()]
 
-    parameters_list = [parameters]
+    parameters_list = [rf_params]
 
     # Cross-validation
     cross_validator = CrossValidation.CrossValidator(n_splits=10, storeResults=True)
@@ -210,15 +224,19 @@ def main():
     
     X = data
     y = data[targetLabel]
+    # for col in data.columns:
+    #     if "hail" in col.lower(): #or "thunder" in col.lower():
+    #         data = data.drop(columns=[col])
     X = data.drop(columns=[targetLabel])  # features only
 
+    print("Data columns:", data.columns)
     if not check_for_non_numeric_values(X):
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
     newMethodUsingGridSearchCV(X, y)
 
-    # oldMethodOfCrossValidation(X, y)
+    oldMethodOfCrossValidation(X, y)
 
 
     
