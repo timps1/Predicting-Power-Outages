@@ -31,31 +31,22 @@ def process_wfo(features_path, outages_df):
     # Add outage_flag
     features["outage_flag"] = flags
 
-    # Create Weather_x columns
-    for h in range(24):
-        rain = f"RainValue_{h}"
-        hail = f"HailValue_{h}"
-        thunder = f"ThunderValue_{h}"
-        weather = f"Weather_{h}"
-        if all(col in features.columns for col in [rain, hail, thunder]):
-            features[weather] = features[[rain, hail, thunder]].max(axis=1)
-
-    # Drop Rain/Hail/Thunder
-    drop_cols = [c for c in features.columns if "RainValue" in c or "HailValue" in c or "ThunderValue" in c]
-    features = features.drop(columns=drop_cols)
-
-    # Reorder columns like Hawaii
+    # === Reorder columns ===
     new_cols = []
     for h in range(24):
         new_cols.extend([
             f"Temp_{h}",
-            f"Weather_{h}",
+            f"RainValue_{h}",
+            f"HailValue_{h}",
+            f"ThunderValue_{h}",
             f"Wind Speed_{h}",
             f"Wind Direction_{h}",
             f"Humidity_{h}",
             f"Barometer_{h}"
         ])
     new_cols.append("outage_flag")
+
+    # Keep only the reordered columns (drop any extras)
     features = features[new_cols]
 
     # Add WFO label
