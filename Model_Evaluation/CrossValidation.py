@@ -3,6 +3,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 import pandas as pd
 import os
+import time
 
 class CrossValidator:
     """
@@ -37,6 +38,7 @@ class CrossValidator:
         reports_list = []
 
         for train_index, test_index in self.kf.split(X):
+            startTime = time.time()
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             
@@ -55,7 +57,8 @@ class CrossValidator:
             report_df["Fold"] = foldNumber
             report_df["Model"] = self.model.getModelInfo()
             reports_list.append(report_df)
-
+            
+            print(f"Finished fold {foldNumber} in {round(time.time() - startTime, 1)}s")
             foldNumber += 1
 
         # ---- Average accuracy ----
