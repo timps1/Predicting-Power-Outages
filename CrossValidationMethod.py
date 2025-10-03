@@ -69,9 +69,19 @@ def MethodOfCrossValidation(X, y):
     #                 'verbose' : 1
     #                 }
 
-    modelClassParameterList = [RandomForestClassifier()]
+    modelClassParameterList = [
+        (RandomForestClassifier(), "rf"), 
+        (KNeighborsClassifier(), "knn"),
+        (XGBClassifier(), "xgb"),
+        (SVC(), "svm")
+        ]
 
-    parameters_list = [rf_params]
+    parameters_list = [
+        rf_params, 
+        knn_params, 
+        xgb_params, 
+        svm_params
+        ]
 
     # Cross-validation
     cross_validator = CrossValidation.CrossValidator(n_splits=5, storeResults=True)
@@ -79,7 +89,7 @@ def MethodOfCrossValidation(X, y):
     modelsList = []
     current_model_type = None
 
-    for i, model in enumerate(modelClassParameterList):
+    for i, (model, tag) in enumerate(modelClassParameterList):
 
         if current_model_type is None:
             current_model_type = model.__class__.__name__
@@ -98,7 +108,8 @@ def MethodOfCrossValidation(X, y):
         print(f"Cross-validating model: {model.getModelInfo()}")
         cross_validator.crossValidate(X.values, y.values)
 
-        modelsList.append(model)
+        modelsList.append((model, tag))
         print(f"------------------------------------------------------------")
     
     cross_validator.printBestModel()
+    return modelsList

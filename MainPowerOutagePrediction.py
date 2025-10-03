@@ -14,6 +14,7 @@ from CrossValidationMethod import MethodOfCrossValidation
 from GridSearchMethod import MethodUsingGridSearchCV
 from PytorchApproach import MethodUsingPytorch
 from Data_Preprocessing import SUS
+import joblib
 
 def main():
     """
@@ -41,14 +42,23 @@ def main():
     #         data = data.drop(columns=[col])
     X = data.drop(columns=[targetLabel])  # features only
 
-    X, y = SUS.clusterCentriodSUS(X, y)
+    # X, y = SUS.nearMissSUS(X, y)
 
-    print("Data columns:", data.columns)
+    # print("Data columns:", data.columns)
     if not check_for_non_numeric_values(X):
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
-    MethodOfCrossValidation(X, y)
+    modelsList = MethodOfCrossValidation(X, y)
+
+    print("Number of Models:", len(modelsList))
+    tags = []
+    for model, tag in modelsList:
+        tags.append(tag)
+        model_filename = f"{tag}_model.joblib"
+        joblib.dump(model, model_filename)
+        print("Model saved!", model_filename)
+    print("Model tags saved:", tags)
 
 
 def check_for_non_numeric_values(df):

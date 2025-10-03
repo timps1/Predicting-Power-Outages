@@ -1,0 +1,11 @@
+Model,precision,recall,f1-score
+XGBClassifier(n_neighbors_2)(weights_distance)(metric_manhattan),0.9636138305300715,0.8971023318427298,0.9291585824973406
+XGBClassifier(n_neighbors_2)(weights_distance)(metric_manhattan),0.9036986848598288,0.9661229335690728,0.933857432848335
+XGBClassifier(n_neighbors_2)(weights_distance)(metric_manhattan),0.9315933214951216,0.9315933214951216,0.9315933214951216
+XGBClassifier(n_neighbors_2)(weights_distance)(metric_manhattan),0.93365625769495,0.9316126327059012,0.9315080076728378
+XGBClassifier(n_neighbors_2)(weights_distance)(metric_manhattan),0.9336851883206542,0.9315933214951216,0.931512886695909
+XGBClassifier(learning_rate_0.1)(gamma_0.01)(max_depth_15)(n_estimators_38)(subsample_1)(random_state_42)(n_jobs_-1),0.9636138305300715,0.8971023318427298,0.9291585824973406
+XGBClassifier(learning_rate_0.1)(gamma_0.01)(max_depth_15)(n_estimators_38)(subsample_1)(random_state_42)(n_jobs_-1),0.9036986848598287,0.9661229335690728,0.933857432848335
+XGBClassifier(learning_rate_0.1)(gamma_0.01)(max_depth_15)(n_estimators_38)(subsample_1)(random_state_42)(n_jobs_-1),0.9315933214951215,0.9315933214951215,0.9315933214951215
+XGBClassifier(learning_rate_0.1)(gamma_0.01)(max_depth_15)(n_estimators_38)(subsample_1)(random_state_42)(n_jobs_-1),0.9336562576949501,0.9316126327059013,0.9315080076728378
+XGBClassifier(learning_rate_0.1)(gamma_0.01)(max_depth_15)(n_estimators_38)(subsample_1)(random_state_42)(n_jobs_-1),0.9336851883206542,0.9315933214951215,0.931512886695909

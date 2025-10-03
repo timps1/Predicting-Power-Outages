@@ -55,9 +55,9 @@ def MethodUsingGridSearchCV(X, y):
         #     'kernel': ['rbf'],
         # },
         {
-            "n_neighbors":[1,2,3,4], 
-            "weights":['distance', "uniform"], 
-            "metric":['manhattan', "euclidean"]
+            "n_neighbors":[2], 
+            "weights":['distance'], 
+            "metric":['manhattan']
         },
         # {
         #     "n_estimators": [300, 400],
