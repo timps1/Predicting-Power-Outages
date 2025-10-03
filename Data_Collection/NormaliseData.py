@@ -19,10 +19,14 @@ def normalizeDataByColumn(data, methodLabel='zero_to_one'):
         print(columnName, end=" | ")
         if 'outage' in columnName:  # Skip target column
                 continue
+        elif 'date' in columnName:
+            continue
         elif "Humidity" in columnName:  # Skip Humidity columns
             continue
         elif "Time" in columnName:
             data = data.drop(columns = columnName)
+            continue
+        elif "Hail" in columnName:
             continue
         elif "Rain" in columnName:
             data[columnName] = data[columnName] / 5

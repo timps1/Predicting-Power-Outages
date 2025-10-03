@@ -85,6 +85,36 @@ def addDiscriptiveInfo(df, columnName):
     addHailValue(df, columnName)
     addThunderValue(df, columnName)
 
+def addWeatherColumn(df):
+    def primary_weather(w):
+        if pd.isna(w):
+            return pd.NA
+        w = normalize_text(w)
+        return w.split(".", 1)[0].strip()
+
+    # temporary text column
+    df["_WeatherText"] = df["Weather"].apply(primary_weather)
+
+    # stable alphabetical encoding: 1..K
+    weather_vals = sorted(df["_WeatherText"].dropna().unique())
+    weather2code = {w: i + 1 for i, w in enumerate(weather_vals)}
+
+    # replace 'Weather' with numeric codes (nullable integer)
+    df["Weather"] = df["_WeatherText"].map(weather2code).astype("Int64")
+
+    # drop helper text column so only numbers remain
+    df = df.drop(columns=["_WeatherText"])
+
+    # Print and save mapping (Code -> Weather text) separately
+    mapping_df = (
+        pd.DataFrame({"Code": range(1, len(weather_vals) + 1), "Weather_Text": weather_vals})
+        .astype({"Code": "int64"})
+    )
+    # print("\nWeather code mapping (Code -> Weather_Text)")
+    # print(mapping_df.to_string(index=False))
+
+    return df
+
 def cleanOneFile(filename, filePath, nextFilePath):
     # 1) Load data
     df = pd.read_csv(filePath + filename)
@@ -114,9 +144,11 @@ def cleanOneFile(filename, filePath, nextFilePath):
 
     # 7) Weather discriptions
 
+    df = addWeatherColumn(df)
+
     addDiscriptiveInfo(df, "Weather")
 
-    df = df.drop(columns='Weather')
+    # df = df.drop(columns='Weather')
 
     df_temp_col_time = df["Time"]
 
@@ -134,15 +166,16 @@ def cleanOneFile(filename, filePath, nextFilePath):
     if match:
         df_temp_col_time[0] = match.group(0)
 
-
     df["Time"] = df_temp_col_time
+
+    df = addWeatherColumn(df)
 
     # Save cleaned dataset — 'Weather' is numeric-only
     dotIndex = filename.rfind(".")
     nexFilename = nextFilePath + "/" + filename[:dotIndex] + "_clean" + ".csv"
     df.to_csv(nexFilename, index=False)
 
-    print("File Saved to:", nexFilename)
+    # print("File Saved to:", nexFilename)
     # print(df["Weather"])
 
 def main():
@@ -159,11 +192,13 @@ def main():
 
     if not os.path.isdir(cleanedFolder):
         os.mkdir(cleanedFolder)
+
+    reboot = True
     
     for file in listOfFiles:
         if f"{wfo.lower()}_weather_" not in file:
             continue
-        elif not os.path.exists(cleanedFolder + "/" + file[:file.rfind(".")] + "_clean" + ".csv"):
+        elif not os.path.exists(cleanedFolder + "/" + file[:file.rfind(".")] + "_clean" + ".csv") or reboot:
             try:
                 cleanOneFile(file, folderWithFiles, cleanedFolder)
             except Exception as e:
