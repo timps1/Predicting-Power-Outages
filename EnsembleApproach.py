@@ -75,7 +75,7 @@ def trainingEnsemble(X, y):
 def fitAndSave(X, y, meta_model, finalEstimatorTag):    
     meta_model.fit(X, y)
 
-    model_filename = f"{finalEstimatorTag}_ensemble_model.joblib"
+    model_filename = f"Trained_models/{finalEstimatorTag}_ensemble_model.joblib"
     joblib.dump(meta_model, model_filename)
     print("Model saved!", model_filename)
 

@@ -11,9 +11,9 @@ import sys
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-# Check if the script is being run as a standalone program
+# --- Entry guard ---
 if __name__ == "__main__":
-    print("Starting dataset split...")
+    print("Starting dataset split (balanced positive case handling)...")
     print("--------------------------------------------------------------------")
 else:
     print("This script is intended to be run as a standalone program.")
@@ -30,13 +30,10 @@ if data.empty:
     print("The dataset is empty. Please provide a valid dataset.")
     sys.exit(1)
 
-# Split the dataset into training and testing sets
-randomState = 42 # For reproducibility
-testSize = 0.2  # 20% of the data will be used for testing
-trainSize = 1 - testSize
-targetLabel = 'target'  # Default target column name
+randomState = 42
+targetLabel = 'outage_flag'
 
-if 'target' not in data.columns:
+if targetLabel not in data.columns:
     print("The dataset must contain a 'target' column for splitting.")
     print("Available columns:", data.columns)
     targetLabel = input("Please enter the name of the target column: ")
@@ -44,25 +41,45 @@ if 'target' not in data.columns:
         print(f"Column '{targetLabel}' does not exist in the dataset.")
         sys.exit(1)
 
-X = data.drop(targetLabel, axis=1)  # Assuming 'target' is the label column
-y = data[targetLabel]
+# Separate positive and negative samples
+positives = data[data[targetLabel] == 1]
+negatives = data[data[targetLabel] == 0]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=testSize, random_state=randomState)
+print(f"Total samples: {len(data)}")
+print(f"Positive samples: {len(positives)}")
+print(f"Negative samples: {len(negatives)}")
 
-# Check distribution of target variable in training and testing sets
-print("Training set size:", len(X_train))
-print("Testing set size:", len(X_test))
-print("Training set target distribution:\n", y_train.value_counts())
-print("Testing set target distribution:\n", y_test.value_counts())
+# --- Split positives: half to test, half to train ---
+pos_train, pos_test = train_test_split(
+    positives, 
+    test_size=0.5, 
+    random_state=randomState
+)
+if len(pos_train) < len(pos_test):
+    pos_train, pos_test = pos_test, pos_train
 
-# Save the training and testing sets to new CSV files
-X_train.to_csv('X_train.csv', index=False)
-X_test.to_csv('X_test.csv', index=False)
-y_train.to_csv('y_train.csv', index=False)
-y_test.to_csv('y_test.csv', index=False)
+# --- Split negatives normally to keep test proportion ~20% total ---
+neg_train, neg_test = train_test_split(
+    negatives, 
+    test_size=0.5, 
+    random_state=randomState
+)
+
+# --- Combine and shuffle ---
+train_df = pd.concat([pos_train, neg_train], axis=0).sample(frac=1, random_state=randomState).reset_index(drop=True)
+test_df = pd.concat([pos_test, neg_test], axis=0).sample(frac=1, random_state=randomState).reset_index(drop=True)
+
+# --- Print distribution ---
+print("Training set size:", len(train_df))
+print("Testing set size:", len(test_df))
+print("Training set target distribution:\n", train_df[targetLabel].value_counts())
+print("Testing set target distribution:\n", test_df[targetLabel].value_counts())
+
+# --- Save combined files ---
+train_df.to_csv(f'{sys.argv[1]}_train_set.csv', index=False)
+test_df.to_csv(f'{sys.argv[1]}_test_set.csv', index=False)
+
 print("Data split completed successfully.")
-print("Training set saved to 'X_train.csv' and 'y_train.csv'.")
-print("Testing set saved to 'X_test.csv' and 'y_test.csv'.")
-
+print("Training set saved to 'train.csv'.")
+print("Testing set saved to 'test.csv'.")
 print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-print("Dataset split completed successfully.")
