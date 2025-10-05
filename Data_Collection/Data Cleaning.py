@@ -121,6 +121,12 @@ def cleanOneFile(filename, filePath, nextFilePath):
 
     # ---------- Helpers ----------
 
+    # 1) If date or wfo column present remove it
+    if "Date" in df.columns:
+        df = df.drop(columns="Date")
+    if "WFO" in df.columns:
+        df = df.drop(columns="WFO")
+
     # 2) Normalize all object columns
     obj_cols = df.select_dtypes(include="object").columns
     for c in obj_cols:
@@ -196,7 +202,7 @@ def main():
     reboot = True
     
     for file in listOfFiles:
-        if f"{wfo.lower()}_weather_" not in file:
+        if f"{wfo.lower()}_weather_" not in file or f"Zone.Identifier" in file:
             continue
         elif not os.path.exists(cleanedFolder + "/" + file[:file.rfind(".")] + "_clean" + ".csv") or reboot:
             try:
@@ -204,6 +210,8 @@ def main():
             except Exception as e:
                 print(file)
                 print("ERROR:", str(e))
+    
+    print("Finished saving to", cleanedFolder)
 
 
 if __name__ == "__main__":

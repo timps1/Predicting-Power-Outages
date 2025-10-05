@@ -157,6 +157,8 @@ def createNZpoint1():
 
     results = []
     final_columns = []
+    debugging = 0
+    debuggingCounter = 0
     for file in listOfFiles:
         
         #Checking searching correct file
@@ -225,7 +227,14 @@ def createNZpoint1():
                     break
 
         df = df.drop(columns="ParsedDateTime")
-        if 288 == len(daySpanDataPoint):
+        # if debugging != len(daySpanDataPoint):
+        #     print(len(daySpanDataPoint), date_str)
+        #     print(daySpanDataPoint)
+        #     debugging = len(daySpanDataPoint)
+        #     debuggingCounter +=1
+        #     if debuggingCounter == 4:
+        #         sys.exit(1)
+        if len(daySpanDataPoint) == 240:
             if len(final_columns) == 0:
                 base_cols = list(df.columns)
                 for t in range(24):  # 0 through 24 hours
@@ -259,11 +268,16 @@ def addKiwiFlags(df, tag, fileName = None):
         }
     outageDF = pd.read_excel(sys.argv[1])
     outageDFForRegion = outageDF[(outageDF["SITE_REGION"] == place_dict[tag])]
-
-
+    print(f"Number of outages: {len(outageDFForRegion)}")
+    counter = 0
     for i, date in enumerate(outageDFForRegion["INTERRUPTION_DATETIME"]):
-        dateFormated = datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S")
+        date = str(date)
+        dateFormated = date[:date.find(" ")]
         df.loc[df["date"] == dateFormated, "outage_flag"] = 1
+        if (df["date"] == dateFormated).any():
+            counter += 1
+    
+    print("Number of outages added to training data:", counter)
     
     return df
 
