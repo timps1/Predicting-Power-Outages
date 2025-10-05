@@ -8,22 +8,25 @@ from sklearn import metrics
 from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 import pandas as pd
+from Models.SVMtorch import SVM
+import xgboost
 from xgboost import XGBClassifier
 import time
 
-def MethodOfCrossValidation(X, y):
+def MethodOfCrossValidation(X, y, passedModels = None):
 
     
     rf_params = {
-        "n_estimators": 300,
+        "n_estimators": 100,
         "random_state": 42,
         "n_jobs": -1
     }
 
     svm_params = {
-        "kernel": "rbf",
-        "C": 20,
-        "probability": True
+        "n_features" : 5000, 
+        "gamma" : "scale", 
+        "lr" : 0.01, 
+        "weight_decay" : 0.0033333
     }
 
     knn_params = {
@@ -33,10 +36,10 @@ def MethodOfCrossValidation(X, y):
     }
 
     xgb_params = {
-        "learning_rate": 0.1,
-        "gamma": 0.01,
-        "max_depth": 15,
-        "n_estimators": 38,
+        "learning_rate": 0.3,
+        "gamma": 0,
+        "max_depth": 6,
+        "n_estimators": 100,
         "subsample": 1,
         "random_state": 42,
         "n_jobs": -1
@@ -69,20 +72,15 @@ def MethodOfCrossValidation(X, y):
     #                 'verbose' : 1
     #                 }
 
-    modelClassParameterList = [
-        (RandomForestClassifier(), "rf"), 
-        (KNeighborsClassifier(), "knn"),
-        (XGBClassifier(), "xgb"),
-        (SVC(), "svm")
-        ]
-
-    parameters_list = [
-        rf_params, 
-        knn_params, 
-        xgb_params, 
-        svm_params
-        ]
-
+    if passedModels is None:
+        modelClassParameterList = [
+            # (RandomForestClassifier(**rf_params), "rf"), 
+            # (KNeighborsClassifier(**knn_params), "knn"),
+            # (XGBClassifier(**xgb_params), "xgb"),
+            (SVM(**svm_params), "svm"),
+            ]
+    else:
+        modelClassParameterList = passedModels
     # Cross-validation
     cross_validator = CrossValidation.CrossValidator(n_splits=5, storeResults=True)
 
@@ -98,15 +96,19 @@ def MethodOfCrossValidation(X, y):
             current_model_type = model.__class__.__name__
             cross_validator.reset()  # Reset cross-validator for new model type
 
-        model = sklearnModel(model=model, parameters= parameters_list[i])
+        model = sklearnModel(model=model)
         print(f"------------------------------------------------------------")
         print(f"Model {i}: {model.getModelInfo()}")
 
         cross_validator.storeResults = (i == len(modelsList) - 1)
 
         cross_validator.setModel(model)
-        print(f"Cross-validating model: {model.getModelInfo()}")
         cross_validator.crossValidate(X.values, y.values)
+        if tag == "xgb":
+            
+            print(f"Internal parameters: {model.model.get_xgb_params()}")
+        
+        print(f"parameters: {model.model.get_params()}")
 
         modelsList.append((model, tag))
         print(f"------------------------------------------------------------")

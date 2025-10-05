@@ -9,6 +9,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 import pandas as pd
 from xgboost import XGBClassifier
+from Models.SVMtorch import SVM
 
 def MethodUsingGridSearchCV(X, y):
 
@@ -21,49 +22,20 @@ def MethodUsingGridSearchCV(X, y):
         "roc_auc" : metrics.make_scorer(metrics.roc_auc_score),
         "r2" : metrics.make_scorer(metrics.r2_score)
     }
-
-    baseLearners = [
-            ('rf', RandomForestClassifier(n_estimators=400, random_state=42)),
-
-            ('svc', SVC(kernel='rbf', C=20, probability=True)),
-
-            ('knn', KNeighborsClassifier(n_neighbors=2, 
-                                            weights='distance', 
-                                            metric='manhattan'
-                                            )),
-
-            ('xgb', XGBClassifier(learning_rate = 0.1,
-                                  gamma=0, 
-                                  max_depth=18,
-                                  subsample = 1,
-                                  random_state=42,
-                                  use_label_encoder=False
-                                  ))         
-        ]
     
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     
     cv_inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    parameters = {'estimators': baseLearners, 'final_estimator': GradientBoostingClassifier(), 'passthrough': True, 'cv': cv_inner}
-
-    modelClassParameterList = [KNeighborsClassifier()]
+    modelClassParameterList = [SVM()]
     
     parameter_grid_list = [
-        # {
-        #     'C': [10, 20, 30, 40, 50, 60],
-        #     'kernel': ['rbf'],
-        # },
         {
-            "n_neighbors":[2], 
-            "weights":['distance'], 
-            "metric":['manhattan']
+            "n_features" : [3500, 4000], 
+            "gamma" : ["scale"], 
+            "lr" : [0.01], 
+            "weight_decay" : [0.01/10, 0.1/20, 0.1/30, 0.1/40]
         },
-        # {
-        #     "n_estimators": [300, 400],
-        #     "random_state": [42],
-        #     "n_jobs": [-1]
-        # }
     ]
     
     for i, model in enumerate(modelClassParameterList):
@@ -73,7 +45,7 @@ def MethodUsingGridSearchCV(X, y):
             estimator=model,
             param_grid=parameter_grid_list[i],
             cv=cv_outer,
-            n_jobs=-1,
+            n_jobs=1,
             verbose=2, 
             scoring=scoring,
             refit='f1'  # refit using the f1 score

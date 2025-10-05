@@ -13,7 +13,7 @@ class sklearnModel:
     """
     def __init__(self, model=None, parameters=None):
         self.model = model  # Placeholder for the sklearn model instance
-        self.parameters = parameters  # Placeholder for model parameters
+        self.parameters = model.get_params()  # Placeholder for model parameters
 
     def fit(self, X, y):
         """
