@@ -3,9 +3,9 @@
 # ==============================
 # Configurable variables
 # ==============================
-wfoOfInterest="HFO"         # <-- Change this to your WFO of interest
+wfoOfInterest="HEB"         # <-- Change this to your WFO of interest
 path_to="../../Weather_Data/"               # <-- Path containing {hfo}_wwa.csv
-weather_data_folder="../../Weather_Data/HFO/"      # Folder where all weather data CSVs are saved
+weather_data_folder="../../Weather_Data/HEB/"      # Folder where all weather data CSVs are saved
 
 # ==============================
 # Step 3: Clean the data
