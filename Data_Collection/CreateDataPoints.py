@@ -270,14 +270,20 @@ def addKiwiFlags(df, tag, fileName = None):
     outageDFForRegion = outageDF[(outageDF["SITE_REGION"] == place_dict[tag])]
     print(f"Number of outages: {len(outageDFForRegion)}")
     counter = 0
-    for i, date in enumerate(outageDFForRegion["INTERRUPTION_DATETIME"]):
-        date = str(date)
-        dateFormated = date[:date.find(" ")]
-        df.loc[df["date"] == dateFormated, "outage_flag"] = 1
-        if (df["date"] == dateFormated).any():
-            counter += 1
+    repeatCount = 0
+    dateSet = []
+    for date in outageDFForRegion["INTERRUPTION_DATETIME"]:
+        dateFormated = str(date).split(" ")[0]  # Only the date part
+        if dateFormated in dateSet:
+            repeatCount += 1
+            continue
+        dateSet.append(dateFormated)
+        mask = df["date"] == dateFormated
+        df.loc[mask, "outage_flag"] = 1
+        counter += mask.sum()  # Count how many rows were updated
     
     print("Number of outages added to training data:", counter)
+    print("Number of repeated dates:", repeatCount)
     
     return df
 
@@ -291,5 +297,5 @@ if __name__ == "__main__":
     if "NZ" not in sys.argv[3] and sys.argv[3] != "AKL":
         createUSAPoints()
     else:
-        # addKiwiFlags(None, sys.argv[3], "CHCNZ_Training_Data.csv")
-        createNZpoint1()
+        addKiwiFlags(None, sys.argv[3], "CHCNZ_Training_Data.csv")
+        # createNZpoint1()
