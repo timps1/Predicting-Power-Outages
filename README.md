@@ -8,3 +8,12 @@ Similar work has been carried out many times, however, nothing we found was base
 
 ## How does it work?
 Talk about running code, what does what...
+
+
+##Authors
+- Alex Timpany
+- Ethan Jackson
+- Yinchi Tan
+- Zitao Wang
+- Yisai Zhang
+- Yusin Zhang
