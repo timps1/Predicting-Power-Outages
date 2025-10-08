@@ -250,13 +250,200 @@ def createNZpoint1():
     print("Size of DF:", len(results))
     if len(results) != 0:
         training_df = pd.DataFrame(results, columns=final_columns)
-        training_df = addKiwiFlags(training_df, tag) 
-        nextFilename = f"{tag}_Training_Data.csv"
+        training_df = addKiwiFlags1(training_df, tag) 
+        nextFilename = f"{tag}_Day_Data.csv"
         training_df.to_csv(nextFilename, index=False)
 
         print(f"Saved training data to {nextFilename}")
 
-def addKiwiFlags(df, tag, fileName = None):
+
+def findClosestHour(df, sometime):
+    # Normalize and clean the time strings
+    df["Time"] = (
+        df["Time"]
+        .astype(str)
+        .str.extract(r"(\d{1,2}:\d{2})")[0]  # capture only HH:MM
+        .str.strip()
+    )
+
+    # Try to parse both 12-hour and 24-hour formats
+    parsed_times = pd.to_datetime(
+        df["Time"].astype(str), format="%H:%M", errors="coerce"
+    ).dt.time
+
+    # If that failed for all, try 24-hour fallback
+    if parsed_times.isna().all():
+        parsed_times = pd.to_datetime(
+            df["Time"], format="%H:%M", errors="coerce"
+        ).dt.time
+
+    # If still nothing valid, raise informative error
+    if parsed_times.isna().all():
+        print("Error: No valid ParsedTime entries found")
+        print("Sample Time values:", df["Time"].head().tolist())
+        raise ValueError("No valid ParsedTime entries found")
+
+    df["ParsedTime"] = parsed_times
+
+    # Find the index with closest time
+    idx = min(
+        range(len(df["ParsedTime"])),
+        key=lambda j: abs(
+            datetime.combine(datetime.min, df["ParsedTime"][j])
+            - datetime.combine(datetime.min, sometime)
+        )
+    )
+
+    return idx
+
+def createNZpoint2():
+    dataFilePath = sys.argv[2]  # e.g. "../../HFO/"
+    if not dataFilePath.endswith("/"):
+        dataFilePath += "/"
+
+    tag = sys.argv[3]
+    dataFilename = f"{tag.lower()}_weather_"
+
+    stepHour = timedelta(hours=1)
+    stepDay = timedelta(hours=24)
+
+    results = []
+    columns_built = False
+    final_columns = []
+
+    issued_dt = datetime(year=2014, month=4, day=9, hour=0)
+
+    out_path = f"{sys.argv[1].rsplit('/', 1)[0]}/{tag.upper()}_Series_Data.csv"
+
+    total_steps = 4039 * 24  # ~4039 days × 24 hours
+    chunkSize = 10000
+    first_chunk = True
+    finalDFSize = 0
+
+    for i in range(total_steps):
+        try:
+            issued_dt += stepHour
+            start = issued_dt
+            end = issued_dt + stepDay
+            start_date, end_date = start.date(), end.date()
+
+            file1 = f"{dataFilePath}{dataFilename}{start.strftime('%d_%m_%Y')}_clean.csv"
+            file2 = f"{dataFilePath}{dataFilename}{end.strftime('%d_%m_%Y')}_clean.csv" if start_date != end_date else None
+
+            try:
+                df = pd.read_csv(file1)
+                df2 = pd.read_csv(file2) if file2 else None
+            except Exception as e:
+                print(f"Missing or bad weather data for step {i}: {e}")
+                continue
+
+            # --- helper ---
+            
+
+            idx = findClosestHour(df, issued_dt.time())
+            df = df.drop(columns="ParsedTime")
+
+            # Collect 24-hour span
+            daySpanDataPoint = []
+            cur_df, cur_idx = df, idx
+            cur_time = start
+
+            for _ in range(24):
+                row = cur_df.iloc[cur_idx]
+                daySpanDataPoint += list(row)
+
+                cur_time += stepHour
+                if cur_time.date() != start_date and df2 is not None:
+                    cur_df = df2
+                    cur_idx = findClosestHour(cur_df, cur_time.time())
+                    df = df.drop(columns="ParsedTime")
+                else:
+                    cur_idx = (cur_idx + 1) % len(cur_df)
+
+            # Build columns
+            if not columns_built:
+                base_cols = list(df.columns)
+                for t in range(24):
+                    for col in base_cols:
+                        final_columns.append(f"{col}_{t}")
+                final_columns += ["date", "end_date", "outage_flag"]
+                columns_built = True
+
+            if len(daySpanDataPoint) == 24 * len(df.columns):
+                daySpanDataPoint += [issued_dt, end, 0]
+                results.append(daySpanDataPoint)
+            else:
+                print(f"Skipping incomplete record at {i}")
+
+            if i % max(total_steps // 10, 1) == 0:
+                print(f"{(i / total_steps) * 100:.0f}% complete")
+
+        except Exception as e:
+            print(f"Error at step {i}: {e}")
+            if f"Error at step {i}: combine() argument 2 must be datetime.time, not NaTType" in f"Error at step {i}: {e}":
+                print(df)
+                sys.exit(1)
+        
+        if i % chunkSize == 0 or i == total_steps - 1:
+            chunk = pd.DataFrame(results, columns=final_columns)
+            finalDFSize += len(results)
+            mode = "w" if first_chunk else "a"
+            chunk.to_csv(out_path, index=False, mode=mode, header=first_chunk)
+            first_chunk = False
+            results.clear()
+            print("Saved chunk")
+
+    print("Size of DF:", finalDFSize)
+    print(f"Saved series data to {out_path}")
+
+    df = addKiwiFlags2(_, tag, out_path)
+
+    for col in df.columns:
+        if "ParsedTime" in col:
+            df = df.drop(columns=col)
+
+    df.to_csv(out_path, index=False, mode="w", header=True)
+    print("Added outages")
+    print("Finished data contruction!")
+
+def addKiwiFlags2(df, tag, fileName = None):
+    
+    if fileName is not None:
+        df = pd.read_csv(fileName)
+
+    place_dict = {
+        "AKL" : "North North Island",
+        "WLGNZ" : "South North Island",
+        "CHCNZ" : "South Island",
+        }
+    outageDF = pd.read_excel(sys.argv[1])
+    outageDFForRegion = outageDF[(outageDF["SITE_REGION"] == place_dict[tag])]
+    print(f"Number of outages: {len(outageDFForRegion)}")
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    df["end_date"] = pd.to_datetime(df["end_date"], errors="coerce")
+    counter = 0
+    repeatCount = 0
+    seenDates = set()
+    for date in outageDFForRegion["INTERRUPTION_DATETIME"]:
+        dateFormated = datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S")  # Only the date part
+        if dateFormated in seenDates:
+            repeatCount += 1
+            continue
+        seenDates.add(dateFormated)
+        mask = (df["date"] <= dateFormated) & (df["end_date"] >= dateFormated)
+        df.loc[mask, "outage_flag"] = 1
+        counter += mask.sum()  
+    
+    for col in df.columns:
+        if "ParsedTime" in col:
+            df = df.drop(columns=col)
+    print("Number of outages added to training data:", counter)
+    print("Number of repeated dates:", repeatCount)
+    
+    df.to_csv(fileName)
+    return df
+
+def addKiwiFlags1(df, tag, fileName = None):
     
     if fileName is not None:
         df = pd.read_csv(fileName)
@@ -297,5 +484,5 @@ if __name__ == "__main__":
     if "NZ" not in sys.argv[3] and sys.argv[3] != "AKL":
         createUSAPoints()
     else:
-        addKiwiFlags(None, sys.argv[3], "CHCNZ_Training_Data.csv")
-        # createNZpoint1()
+        addKiwiFlags2(None, sys.argv[3], "../../Weather_Data/WLGNZ_Series_Data.csv")
+        # createNZpoint2()
