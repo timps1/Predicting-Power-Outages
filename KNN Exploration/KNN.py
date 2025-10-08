@@ -9,11 +9,6 @@ from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 SEED = 114514
 np.random.seed(SEED)
 
-prefix = "AKL"
-
-# CSV file path
-file_path = f"./{prefix}_Training_Data_normalised.csv"
-
 '''
 # Read first 5 rows
 df_head = pd.read_csv(file_path, nrows=5)
@@ -80,7 +75,10 @@ def evaluate_model(model, X_test, y_test):
     print(f"Test accuracy: {acc:.4f}")
 
 def save_grid_search_results(grid_search, X_train_scaled, X_test_scaled,
-                             y_train, y_test, output_path=f"{prefix}_grid_search_results.csv"):
+                             y_train, y_test, prefix, output_path=""):
+    
+    output_path=f"{prefix}_grid_search_results.csv"
+    
     results = pd.DataFrame(grid_search.cv_results_)
     
     results["rank_train_score"] = results["mean_train_score"].rank(ascending=False, method="min").astype(int)
@@ -143,7 +141,7 @@ def save_grid_search_results(grid_search, X_train_scaled, X_test_scaled,
     results.to_csv(output_path, index=False)
     print(f"Saved grid search results to {output_path}")
 
-def run_knn_pipeline(file_path, param_grid, target="outage_flag", sample=True, sample_size=100000, test_size=0.2):
+def run_knn_pipeline(file_path, prefix, param_grid, target="outage_flag", sample=True, sample_size=100000, test_size=0.2):
     """Complete pipeline with optional random sampling"""
     X, y = load_data(file_path, target)
     
@@ -167,13 +165,21 @@ def run_knn_pipeline(file_path, param_grid, target="outage_flag", sample=True, s
     # Step 2: Holdout evaluation
     evaluate_model(best_model, X_test_scaled, y_test)
     
-    save_grid_search_results(grid_search, X_train_scaled, X_test_scaled, y_train, y_test)
+    save_grid_search_results(grid_search, X_train_scaled, X_test_scaled, y_train, y_test, prefix)
 
-param_grid = {
-    "n_neighbors": list(range(1, 10)),    # test k from 1 to 10
-    "weights": ["uniform", "distance"],   # voting weight
-    "metric": ["euclidean", "manhattan", "minkowski"]  # distance metrics
-}
+if __name__ == "__main__": 
 
-# Default: random sample of 100000 rows
-run_knn_pipeline(file_path, param_grid)
+    prefix = "AKL"
+
+    # CSV file path
+    file_path = f"./{prefix}_Training_Data_normalised.csv"
+
+
+    param_grid = {
+        "n_neighbors": list(range(1, 10)),    # test k from 1 to 10
+        "weights": ["uniform", "distance"],   # voting weight
+        "metric": ["euclidean", "manhattan", "minkowski"]  # distance metrics
+    }
+
+    # Default: random sample of 100000 rows
+    run_knn_pipeline(file_path, prefix, param_grid)
