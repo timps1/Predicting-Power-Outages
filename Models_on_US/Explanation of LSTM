@@ -1,0 +1,15 @@
+Before running, make sure ALL_USA_TRAINING_DATA.csv is in the folder
+
+======= US_LSTM_test_sampling.py =======
+is used to test several sampling methods
+This will save the results of each method as a csv file (but I haven't used it for hyperparameter tuning yet)
+
+======= US_LSTM_SUS_ClassWeight.py =======
+is the version that performs the final selection of sampling methods on the US dataset
+Finally, the trained model based on the US dataset will be saved as usa_lstm_model.h5
+
+======= US_LSTM_ensemble.py =======
+is the version used for the ensemble model
+
+======= main.py =======
+is a possible usage of the LSTM class...
