@@ -1,4 +1,4 @@
-# Predicting-Power-Outages
+# Predicting Power Outages
 
 ## What is this?
 The aim of this project is to create models, and tie them together in an ensemble, to predict whether a power outage will occur in New Zealand based on weather data.
