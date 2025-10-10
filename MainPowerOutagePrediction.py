@@ -12,8 +12,8 @@ import pandas as pd
 from xgboost import XGBClassifier
 from CrossValidationMethod import MethodOfCrossValidation
 from GridSearchMethod import MethodUsingGridSearchCV
-from EnsembleApproach import trainingEnsemble
-from TrainingBaseLearners import trainBaseLearners
+from EnsembleApproach import trainingEnsemble, openAndPredict
+from BaseLearnersTraining import trainBaseLearners
 from Data_Preprocessing import SUS
 import joblib
 
@@ -33,7 +33,7 @@ def main():
         sys.exit(1)
     
     for columnName in data.columns:
-        if "date" in columnName or "Time_" in columnName:
+        if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName:
             data = data.drop(columns=columnName)
 
     X = data
@@ -43,7 +43,8 @@ def main():
     #         data = data.drop(columns=[col])
     X = data.drop(columns=[targetLabel])  # features only
 
-    X, y = SUS.nearMissSUS(X, y)
+    # X = pd.concat(X, y, axis=1)
+    # X.to_csv(f"{sys.argv[1][:sys.argv[1].rfind(".")]}_near_miss.csv")
 
     # print("Data columns:", data.columns)
     if not check_for_non_numeric_values(X):
@@ -54,10 +55,12 @@ def main():
 
     # MethodUsingGridSearchCV(X, y)
 
-    # trainBaseLearners(X, y)
+    trainBaseLearners(X, y)
 
-    trainingEnsemble(X, y)
+    # trainingEnsemble(X, y)
 
+    # openAndPredict(X, y)
+    
 
 
 

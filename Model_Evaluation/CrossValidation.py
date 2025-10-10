@@ -17,6 +17,7 @@ class CrossValidator:
         self.scores = []   # overall scores
         self.reports = []  # detailed classification reports
         self.storeResults = storeResults
+        self.clear = True #Saved folds can be rerun
 
     def setModel(self, model):
         """
@@ -39,6 +40,7 @@ class CrossValidator:
 
         for train_index, test_index in self.kf.split(X):
             startTime = time.time()
+
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             

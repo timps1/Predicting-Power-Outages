@@ -50,36 +50,48 @@ print(f"Positive samples: {len(positives)}")
 print(f"Negative samples: {len(negatives)}")
 
 # --- Split positives: half to test, half to train ---
-pos_train, pos_test = train_test_split(
-    positives, 
-    test_size=0.5, 
-    random_state=randomState
-)
-if len(pos_train) < len(pos_test):
-    pos_train, pos_test = pos_test, pos_train
+# pos_train, pos_test = train_test_split(
+#     positives, 
+#     test_size=0.25, 
+#     random_state=randomState
+# )
+# if len(pos_train) < len(pos_test):
+#     pos_train, pos_test = pos_test, pos_train
 
-# --- Split negatives normally to keep test proportion ~20% total ---
-neg_train, neg_test = train_test_split(
-    negatives, 
-    test_size=0.5, 
-    random_state=randomState
-)
+# # --- Split negatives normally to keep test proportion ~20% total ---
+# neg_train, neg_test = train_test_split(
+#     negatives, 
+#     test_size=0.25, 
+#     random_state=randomState
+# )
 
 # --- Combine and shuffle ---
-train_df = pd.concat([pos_train, neg_train], axis=0).sample(frac=1, random_state=randomState).reset_index(drop=True)
-test_df = pd.concat([pos_test, neg_test], axis=0).sample(frac=1, random_state=randomState).reset_index(drop=True)
+sliceOfPie = (len(data) - len(data)//3)
+train_df = data.iloc[:sliceOfPie].sample(frac=1, random_state=randomState).reset_index(drop=True) # pd.concat([pos_train, neg_train], axis=0).sample(frac=1, random_state=randomState).reset_index(drop=True)
+trainingEnsembledf = train_df[:len(train_df)//2]
+trainingBasedf = train_df[len(train_df)//2:]
+test_df = data.iloc[sliceOfPie:] # pd.concat([pos_test, neg_test], axis=0).sample(frac=1, random_state=randomState).reset_index(drop=True)
 
 # --- Print distribution ---
 print("Training set size:", len(train_df))
+print("\tEnsembles Training set:", len(trainingEnsembledf))
+print("\tBaseLearner Training set:", len(trainingBasedf))
 print("Testing set size:", len(test_df))
 print("Training set target distribution:\n", train_df[targetLabel].value_counts())
+print("\tEnsemble Training set:\n", trainingEnsembledf[targetLabel].value_counts())
+print("\tBaselearner Training set:\n", trainingBasedf[targetLabel].value_counts())
 print("Testing set target distribution:\n", test_df[targetLabel].value_counts())
+print("Training ensembles:\n")
 
-# --- Save combined files ---
-train_df.to_csv(f'{sys.argv[1]}_train_set.csv', index=False)
-test_df.to_csv(f'{sys.argv[1]}_test_set.csv', index=False)
+# # --- Save combined files ---
+# train_df.to_csv(f'{sys.argv[1][:sys.argv[1].rfind(".")]}_train_set.csv', index=False)
+# test_df.to_csv(f'{sys.argv[1][:sys.argv[1].rfind(".")]}_test_set.csv', index=False)
+trainingEnsembledf.to_csv(f'{sys.argv[1][:sys.argv[1].rfind(".")]}_ensemble_train_set.csv', index=False)
+trainingBasedf.to_csv(f'{sys.argv[1][:sys.argv[1].rfind(".")]}_baselearner_train_set.csv', index=False)
 
 print("Data split completed successfully.")
-print("Training set saved to 'train.csv'.")
-print("Testing set saved to 'test.csv'.")
+print(f"Training set saved to '{sys.argv[1][:sys.argv[1].rfind(".")]}_train_set.csv'.")
+print(f"Ensemble Training set saved to '{sys.argv[1][:sys.argv[1].rfind(".")]}_ensemble_train_set.csv'.")
+print(f"Baselearner Training set saved to '{sys.argv[1][:sys.argv[1].rfind(".")]}_baselearner_train_set.csv'.")
+print(f"Testing set saved to '{sys.argv[1][:sys.argv[1].rfind(".")]}_test_set.csv'.")
 print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
