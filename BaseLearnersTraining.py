@@ -21,7 +21,7 @@ def buildAndSaveBaseLearners(X, y):
 
     
     rf_params = {
-        "n_estimators": 100,
+        "n_estimators": 200,
         "random_state": 42,
         "n_jobs": -1
     }
@@ -34,7 +34,7 @@ def buildAndSaveBaseLearners(X, y):
     }
 
     knn_params = {
-        "n_neighbors": 2,
+        "n_neighbors": 4,
         "weights": "distance",
         "metric": "manhattan"
     }
@@ -50,9 +50,9 @@ def buildAndSaveBaseLearners(X, y):
     }
 
     et_params = {
-        "n_estimators" : 5, 
+        "n_estimators" : 80, 
         "criterion" : 'entropy', 
-        "max_features" : 2
+        "max_features" : 80
     }
 
     modelClassParameterList = [
@@ -77,10 +77,10 @@ def buildAndSaveBaseLearners(X, y):
         model.fit(X,y)
 
         if tag == "svm":
-            model_filename = f"Trained_Models/{tag}_model.pth"
+            model_filename = f"Trained_Models/{additionalLabel}_{tag}_model.pth"
             model.save(model_filename)
         else:
-            model_filename = f"Trained_Models/{tag}_model.joblib"
+            model_filename = f"Trained_Models/{additionalLabel}_{tag}_model.joblib"
             joblib.dump(model, model_filename)
             print("Model saved!", model_filename)
         
@@ -126,15 +126,15 @@ def trainBaseLearners(X, y):
     }
 
     et_params = {
-        "n_estimators" : 5, 
+        "n_estimators" : 80, 
         "criterion" : 'entropy', 
-        "max_features" : 2
+        "max_features" : 80
     }
 
     modelClassParameterList = [
-        (RandomForestClassifier(**rf_params), "rf"), 
-        (KNeighborsClassifier(**knn_params), "knn"),
-        (XGBClassifier(**xgb_params), "xgb"),
+        # (RandomForestClassifier(**rf_params), "rf"), 
+        # (KNeighborsClassifier(**knn_params), "knn"),
+        # (XGBClassifier(**xgb_params), "xgb"),
         # (SVM(**svm_params), "svm"),
         (ExtraTreesClassifier(**et_params), "et"),
         ]

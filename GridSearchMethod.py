@@ -32,9 +32,9 @@ def MethodUsingGridSearchCV(X, y):
     
     parameter_grid_list = [
         {
-            "n_estimators" : [80, 100,150], 
+            "n_estimators" : [80], 
             "criterion" : ['entropy'], 
-            "max_features" : [12, 20, 25]
+            "max_features" : [50, 60, 70, 80]
         },
     ]
     
@@ -45,7 +45,7 @@ def MethodUsingGridSearchCV(X, y):
             estimator=model,
             param_grid=parameter_grid_list[i],
             cv=cv_outer,
-            n_jobs=1,
+            n_jobs=2,
             verbose=2, 
             scoring=scoring,
             refit='f1'  # refit using the f1 score

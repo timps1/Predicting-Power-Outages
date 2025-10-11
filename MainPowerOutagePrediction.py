@@ -58,7 +58,7 @@ def main():
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
-    MethodUsingGridSearchCV(X, y)
+    # MethodUsingGridSearchCV(X, y)
 
     # modelsList = MethodOfCrossValidation(X, y)
 
@@ -66,7 +66,7 @@ def main():
 
     # trainBaseLearners(X, y)
 
-    # buildAndSaveBaseLearners(X, y)
+    buildAndSaveBaseLearners(X, y)
 
     # trainingEnsemble(X, y)
 
