@@ -16,6 +16,7 @@ from Models.SVMtorch import SVM
 import joblib
 from CrossValidationMethod import MethodOfCrossValidation
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import InputLineManagement as ilm
 
 
 def trainingEnsemble(X, y):
@@ -35,12 +36,11 @@ def trainingEnsemble(X, y):
         "n_jobs": -1
     }
 
-    modelFilenamesAndTags = [
-        ("Trained_Models/rf_model.joblib", "rf"),
-        ("Trained_Models/svm_model.pth", "svm"),
-        ("Trained_Models/xgb_model.joblib", "xgb"),
-        ("Trained_Models/knn_model.joblib", "knn")
-    ]
+    inputModelsFile = ilm.getArg("MODELS-FILENAME-READ", "r")
+    modelsWithTags = inputModelsFile.read().strip().split("\n")
+    inputModelsFile.close()
+
+    modelFilenamesAndTags = [tuple(modelAndTag.strip().split(",")) for modelAndTag in modelsWithTags]
 
     loadedModels = []
 

@@ -15,8 +15,11 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 import os
-from Data_Preprocessing.SUS import chooseSUS
+from Data_Preprocessing.SUS import applySUS
 from Data_Preprocessing.smote_method import apply_smote
+import InputLineManagement as ilm
+
+
 
 def MethodOfCrossValidation(X, y, passedModels = None):
 
@@ -137,7 +140,7 @@ class CrossValidator:
         self.scores = []   # overall scores
         self.reports = []  # detailed classification reports
         self.storeResults = storeResults
-        self.remakeFolds = True #Saved folds can be rerun
+        self.remakeFolds = int(ilm.getArg("RM-FOLDS"))==1 #Saved folds can be rerun
 
     def setModel(self, model):
         """
@@ -159,7 +162,6 @@ class CrossValidator:
         scores_list = []
         reports_list = []
         foldFileDir = "../"
-        typeSUS = "NearMiss" # "NearMiss", "TomekLink", "Cluster"
 
         for train_index, test_index in self.kf.split(X):
             startTime = time.time()
@@ -168,18 +170,17 @@ class CrossValidator:
             y_train, y_test = y[train_index], y[test_index]
 
             if self.remakeFolds:
-                if sys.argv[2] != "pass":
-                    X_train, y_train = chooseSUS(typeSUS, X_train, y_train)
-                if sys.argv[3] != "pass":
-                    X_train, y_train = apply_smote(X_train, y_train)
+                X_train, y_train = applySUS(X_train, y_train)
+                X_train, y_train = apply_smote(X_train, y_train)
                 saveFoldDF = pd.concat([pd.DataFrame(X_train, columns=columnNames),
                                         pd.Series(y_train, name="outage_flag")], 
                                         axis=1)
-                saveFoldDF.to_csv(foldFileDir+f"fold{foldNumber}.csv", index=False)
-                print(f"Saved fold csv: {foldFileDir}fold{foldNumber}.csv")
+                if ilm.getArg("SAVE-RM-FOLDS") == 1:
+                    saveFoldDF.to_csv(foldFileDir+f"fold{foldNumber}.csv", index=False)
+                    print(f"Saved fold csv: {foldFileDir}fold{foldNumber}.csv")
             
             else:
-                saveFoldDF = pd.read_csv(foldFileDir+typeSUS+f"fold{foldNumber}.csv")
+                saveFoldDF = pd.read_csv(foldFileDir+f"fold{foldNumber}.csv")
                 X_train =  saveFoldDF.drop(columns="outage_flag")
                 y_train = saveFoldDF["outage_flag"]
                 X_train = X_train.values
@@ -224,10 +225,10 @@ class CrossValidator:
         avg_report.insert(0, "Model", model_name)
 
         print("Average Classification Report:")
-        print(avg_report)
+        print(f"Model {avg_report["Model"][0]}")
+        print(avg_report.drop(columns="Model").to_string())
         self.reports.append(avg_report)
 
-        self.saveResults()
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         
         self.scores.append({

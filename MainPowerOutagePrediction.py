@@ -13,8 +13,9 @@ from xgboost import XGBClassifier
 from CrossValidationMethod import MethodOfCrossValidation
 from GridSearchMethod import MethodUsingGridSearchCV
 from EnsembleApproach import trainingEnsemble, openAndPredict
-from BaseLearnersTraining import trainBaseLearners
+from BaseLearnersTraining import trainBaseLearners, buildAndSaveBaseLearners
 from Data_Preprocessing import SUS
+import InputLineManagement as ilm
 import joblib
 
 def main():
@@ -22,8 +23,14 @@ def main():
     Main function to run the power outage prediction project.
     """
 
+    # Reading inputline
+    ilm.intialiseGLOBAL_DICTIONARY()
+
     # Get input data
-    data = pd.read_csv(sys.argv[1])
+    data = pd.read_csv(ilm.getArg("INPUT"))
+
+    if ilm.getArg("SECONDARY-INPUT") != 0:
+        data = pd.concat([data,pd.read_csv(ilm.getArg("SECONDARY-INPUT"))], axis=0)
     
     # Split data into features and target
     targetLabel = 'outage_flag'  # Assuming 'outage' is the target column
@@ -51,11 +58,15 @@ def main():
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
+    MethodUsingGridSearchCV(X, y)
+
     # modelsList = MethodOfCrossValidation(X, y)
 
     # MethodUsingGridSearchCV(X, y)
 
-    trainBaseLearners(X, y)
+    # trainBaseLearners(X, y)
+
+    # buildAndSaveBaseLearners(X, y)
 
     # trainingEnsemble(X, y)
 

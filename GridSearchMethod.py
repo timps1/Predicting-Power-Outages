@@ -10,6 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 import pandas as pd
 from xgboost import XGBClassifier
 from Models.SVMtorch import SVM
+from sklearn.ensemble import ExtraTreesClassifier
 
 def MethodUsingGridSearchCV(X, y):
 
@@ -27,14 +28,13 @@ def MethodUsingGridSearchCV(X, y):
     
     cv_inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    modelClassParameterList = [SVM()]
+    modelClassParameterList = [ExtraTreesClassifier()]
     
     parameter_grid_list = [
         {
-            "n_features" : [3500, 4000], 
-            "gamma" : ["scale"], 
-            "lr" : [0.01], 
-            "weight_decay" : [0.01/10, 0.1/20, 0.1/30, 0.1/40]
+            "n_estimators" : [80, 100,150], 
+            "criterion" : ['entropy'], 
+            "max_features" : [12, 20, 25]
         },
     ]
     

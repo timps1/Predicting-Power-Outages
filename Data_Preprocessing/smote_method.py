@@ -1,6 +1,9 @@
 from imblearn.over_sampling import SMOTE
 from collections import Counter
 import sys
+import InputLineManagement as ilm
+
+GLOBAL_VERB = ilm.getArg("VERBOSE")
 
 def apply_smote(x, y):
     """
@@ -11,13 +14,23 @@ def apply_smote(x, y):
         x: SMOTE data column
         y: SMOTE flag column
     """
-    print("Distribution before SMOTE:", Counter(y))
-    smote = SMOTE(sampling_strategy=float(sys.argv[3]), random_state=42)
+    if GLOBAL_VERB == 1: print("Distribution before SMOTE:", Counter(y))
+    if is_float(ilm.getArg("SMOTE-SAMP-STRAT")):
+        smote = SMOTE(sampling_strategy=float(ilm.getArg("SMOTE-SAMP-STRAT")), random_state=42)
+    elif ilm.getArg("SMOTE-SAMP-STRAT") != "pass":
+        smote = SMOTE(sampling_strategy=ilm.getArg("SMOTE-SAMP-STRAT"), random_state=42)
+    else:
+        return x,y
     x,y = smote.fit_resample(x,y)
-    print("Distribution after SMOTE:", Counter(y))
+    if GLOBAL_VERB == 1: print("Distribution after SMOTE:", Counter(y))
     return x,y
 
-
+def is_float(value):
+    try:
+        float(value)  # Attempt to convert the string to a float
+        return True
+    except ValueError:
+        return False
 
 
 

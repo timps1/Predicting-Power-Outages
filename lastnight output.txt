@@ -1,0 +1,115 @@
+(.venv) alext@ATs-First-PC:~/CS760Project/Predicting-Power-Outages$ python3 MainPowerOutagePrediction.py ../ALL_USA_TRAINING_DATA_normalised.csv SUS-SAMP-STRAT=0.2 SMOTE-SAMP-STRAT=1 RM-FOLDS=0 SAVE-RM-FOLDS=0
+Starting power outage prediction project...
+--------------------------------------------------------------------
+All values are numeric.
+------------------------------------------------------------
+Model 0: RandomForestClassifier(bootstrap_True)(ccp_alpha_0.0)(class_weight_None)(criterion_gini)(max_depth_None)(max_features_sqrt)(max_leaf_nodes_None)(max_samples_None)(min_impurity_decrease_0.0)(min_samples_leaf_1)(min_samples_split_2)(min_weight_fraction_leaf_0.0)(monotonic_cst_None)(n_estimators_200)(n_jobs_-1)(oob_score_False)(random_state_42)(verbose_0)(warm_start_False)
+Finished fold 1 in 45.4s
+
+Finished fold 2 in 41.3s
+
+Finished fold 3 in 40.5s
+
+Finished fold 4 in 42.4s
+
+Finished fold 5 in 39.4s
+
+>>>>>>>>>>>>>>>> Average Score across 5 folds: 0.9276135769835543
+Average Classification Report:
+/home/alext/CS760Project/Predicting-Power-Outages/CrossValidationMethod.py:228: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  print(f"Model {avg_report["Model"][0]}")
+Model RandomForestClassifier(bootstrap_True)(ccp_alpha_0.0)(class_weight_None)(criterion_gini)(max_depth_None)(max_features_sqrt)(max_leaf_nodes_None)(max_samples_None)(min_impurity_decrease_0.0)(min_samples_leaf_1)(min_samples_split_2)(min_weight_fraction_leaf_0.0)(monotonic_cst_None)(n_estimators_200)(n_jobs_-1)(oob_score_False)(random_state_42)(verbose_0)(warm_start_False)
+              precision    recall  f1-score
+0              0.736711  0.569253  0.642143
+1              0.946134  0.973724  0.959730
+accuracy       0.927614  0.927614  0.927614
+macro avg      0.841422  0.771489  0.800936
+weighted avg   0.922230  0.927614  0.923514
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+parameters: {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 'sqrt', 'max_leaf_nodes': None, 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'n_estimators': 200, 'n_jobs': -1, 'oob_score': False, 'random_state': 42, 'verbose': 0, 'warm_start': False}
+------------------------------------------------------------
+------------------------------------------------------------
+Model 1: KNeighborsClassifier(algorithm_auto)(leaf_size_30)(metric_manhattan)(metric_params_None)(n_jobs_None)(n_neighbors_2)(p_2)(weights_distance)
+Finished fold 1 in 178.4s
+
+Finished fold 2 in 184.0s
+
+Finished fold 3 in 181.4s
+
+Finished fold 4 in 180.1s
+
+Finished fold 5 in 182.7s
+
+>>>>>>>>>>>>>>>> Average Score across 5 folds: 0.8486025784747093
+Average Classification Report:
+/home/alext/CS760Project/Predicting-Power-Outages/CrossValidationMethod.py:228: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  print(f"Model {avg_report["Model"][0]}")
+Model KNeighborsClassifier(algorithm_auto)(leaf_size_30)(metric_manhattan)(metric_params_None)(n_jobs_None)(n_neighbors_2)(p_2)(weights_distance)
+              precision    recall  f1-score
+0              0.415411  0.804438  0.547884
+1              0.971358  0.854293  0.909072
+accuracy       0.848603  0.848603  0.848603
+macro avg      0.693384  0.829365  0.728478
+weighted avg   0.907962  0.848603  0.867885
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+parameters: {'algorithm': 'auto', 'leaf_size': 30, 'metric': 'manhattan', 'metric_params': None, 'n_jobs': None, 'n_neighbors': 2, 'p': 2, 'weights': 'distance'}
+------------------------------------------------------------
+------------------------------------------------------------
+Model 2: XGBClassifier(objective_binary:logistic)(base_score_None)(booster_None)(callbacks_None)(colsample_bylevel_None)(colsample_bynode_None)(colsample_bytree_None)(device_None)(early_stopping_rounds_None)(enable_categorical_False)(eval_metric_None)(feature_types_None)(feature_weights_None)(gamma_0)(grow_policy_None)(importance_type_None)(interaction_constraints_None)(learning_rate_0.3)(max_bin_None)(max_cat_threshold_None)(max_cat_to_onehot_None)(max_delta_step_None)(max_depth_6)(max_leaves_None)(min_child_weight_None)(missing_nan)(monotone_constraints_None)(multi_strategy_None)(n_estimators_100)(n_jobs_-1)(num_parallel_tree_None)(random_state_42)(reg_alpha_None)(reg_lambda_None)(sampling_method_None)(scale_pos_weight_None)(subsample_1)(tree_method_None)(validate_parameters_None)(verbosity_None)
+Finished fold 1 in 7.7s
+
+Finished fold 2 in 6.6s
+
+Finished fold 3 in 6.7s
+
+Finished fold 4 in 5.2s
+
+Finished fold 5 in 5.4s
+
+>>>>>>>>>>>>>>>> Average Score across 5 folds: 0.8388457630712765
+Average Classification Report:
+/home/alext/CS760Project/Predicting-Power-Outages/CrossValidationMethod.py:228: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  print(f"Model {avg_report["Model"][0]}")
+Model XGBClassifier(objective_binary:logistic)(base_score_None)(booster_None)(callbacks_None)(colsample_bylevel_None)(colsample_bynode_None)(colsample_bytree_None)(device_None)(early_stopping_rounds_None)(enable_categorical_False)(eval_metric_None)(feature_types_None)(feature_weights_None)(gamma_0)(grow_policy_None)(importance_type_None)(interaction_constraints_None)(learning_rate_0.3)(max_bin_None)(max_cat_threshold_None)(max_cat_to_onehot_None)(max_delta_step_None)(max_depth_6)(max_leaves_None)(min_child_weight_None)(missing_nan)(monotone_constraints_None)(multi_strategy_None)(n_estimators_100)(n_jobs_-1)(num_parallel_tree_None)(random_state_42)(reg_alpha_None)(reg_lambda_None)(sampling_method_None)(scale_pos_weight_None)(subsample_1)(tree_method_None)(validate_parameters_None)(verbosity_None)
+              precision    recall  f1-score
+0              0.330307  0.401699  0.362490
+1              0.920763  0.895116  0.907756
+accuracy       0.838846  0.838846  0.838846
+macro avg      0.625535  0.648408  0.635123
+weighted avg   0.853426  0.838846  0.845573
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Internal parameters: {'objective': 'binary:logistic', 'base_score': None, 'booster': None, 'colsample_bylevel': None, 'colsample_bynode': None, 'colsample_bytree': None, 'device': None, 'eval_metric': None, 'gamma': 0, 'grow_policy': None, 'interaction_constraints': None, 'learning_rate': 0.3, 'max_bin': None, 'max_cat_threshold': None, 'max_cat_to_onehot': None, 'max_delta_step': None, 'max_depth': 6, 'max_leaves': None, 'min_child_weight': None, 'monotone_constraints': None, 'multi_strategy': None, 'n_jobs': -1, 'num_parallel_tree': None, 'random_state': 42, 'reg_alpha': None, 'reg_lambda': None, 'sampling_method': None, 'scale_pos_weight': None, 'subsample': 1, 'tree_method': None, 'validate_parameters': None, 'verbosity': None}
+parameters: {'objective': 'binary:logistic', 'base_score': None, 'booster': None, 'callbacks': None, 'colsample_bylevel': None, 'colsample_bynode': None, 'colsample_bytree': None, 'device': None, 'early_stopping_rounds': None, 'enable_categorical': False, 'eval_metric': None, 'feature_types': None, 'feature_weights': None, 'gamma': 0, 'grow_policy': None, 'importance_type': None, 'interaction_constraints': None, 'learning_rate': 0.3, 'max_bin': None, 'max_cat_threshold': None, 'max_cat_to_onehot': None, 'max_delta_step': None, 'max_depth': 6, 'max_leaves': None, 'min_child_weight': None, 'missing': nan, 'monotone_constraints': None, 'multi_strategy': None, 'n_estimators': 100, 'n_jobs': -1, 'num_parallel_tree': None, 'random_state': 42, 'reg_alpha': None, 'reg_lambda': None, 'sampling_method': None, 'scale_pos_weight': None, 'subsample': 1, 'tree_method': None, 'validate_parameters': None, 'verbosity': None}
+------------------------------------------------------------
+------------------------------------------------------------
+Model 3: ExtraTreesClassifier(bootstrap_False)(ccp_alpha_0.0)(class_weight_None)(criterion_entropy)(max_depth_None)(max_features_2)(max_leaf_nodes_None)(max_samples_None)(min_impurity_decrease_0.0)(min_samples_leaf_1)(min_samples_split_2)(min_weight_fraction_leaf_0.0)(monotonic_cst_None)(n_estimators_5)(n_jobs_None)(oob_score_False)(random_state_None)(verbose_0)(warm_start_False)
+Finished fold 1 in 3.7s
+
+Finished fold 2 in 4.1s
+
+Finished fold 3 in 4.5s
+
+Finished fold 4 in 4.2s
+
+Finished fold 5 in 3.8s
+
+>>>>>>>>>>>>>>>> Average Score across 5 folds: 0.8180211480836725
+Average Classification Report:
+/home/alext/CS760Project/Predicting-Power-Outages/CrossValidationMethod.py:228: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  print(f"Model {avg_report["Model"][0]}")
+Model ExtraTreesClassifier(bootstrap_False)(ccp_alpha_0.0)(class_weight_None)(criterion_entropy)(max_depth_None)(max_features_2)(max_leaf_nodes_None)(max_samples_None)(min_impurity_decrease_0.0)(min_samples_leaf_1)(min_samples_split_2)(min_weight_fraction_leaf_0.0)(monotonic_cst_None)(n_estimators_5)(n_jobs_None)(oob_score_False)(random_state_None)(verbose_0)(warm_start_False)
+              precision    recall  f1-score
+0              0.349205  0.689973  0.463709
+1              0.954368  0.834488  0.890410
+accuracy       0.818021  0.818021  0.818021
+macro avg      0.651787  0.762231  0.677059
+weighted avg   0.885366  0.818021  0.841763
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+parameters: {'bootstrap': False, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'entropy', 'max_depth': None, 'max_features': 2, 'max_leaf_nodes': None, 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'n_estimators': 5, 'n_jobs': None, 'oob_score': False, 'random_state': None, 'verbose': 0, 'warm_start': False}
+------------------------------------------------------------
+
+🏆 Best Model:
+                                               Model Average_Accuracy
+0  <Models.SklearnModels.sklearnModel object at 0...         0.818021
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Power outage prediction project completed successfully.
