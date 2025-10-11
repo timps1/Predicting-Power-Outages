@@ -13,6 +13,7 @@ First, we have preprocessed our weather data, normalising it, and making sure ev
 - Random Forests
 - LSTM
 - SVM
+  
 To utilise the strengths of each model, we assembled an ensemble in a stacking manner, and predict using the majority vote. We focus on the recall of our model, i.e., what percentage of "Yes, power outage occured" are we predicting as "Yes, power outage occured". 
 
 
