@@ -90,7 +90,7 @@ def MethodOfCrossValidation(X, y, passedModels = None):
     else:
         modelClassParameterList = passedModels
     # Cross-validation
-    cross_validator = CrossValidator(n_splits=5, storeResults=True)
+    cross_validator = CrossValidator(n_splits=2, storeResults=True)
 
     modelsList = []
     current_model_type = None
@@ -110,8 +110,6 @@ def MethodOfCrossValidation(X, y, passedModels = None):
         model = sklearnModel(model=model)
         print(f"------------------------------------------------------------")
         print(f"Model {i}: {model.getModelInfo()}")
-
-        cross_validator.storeResults = (i == len(modelsList) - 1)
 
         cross_validator.setModel(model)
         cross_validator.crossValidate(X.values, y.values, X.columns)
@@ -228,6 +226,7 @@ class CrossValidator:
         print(f"Model {avg_report["Model"][0]}")
         print(avg_report.drop(columns="Model").to_string())
         self.reports.append(avg_report)
+        self.saveResults()
 
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         
@@ -237,31 +236,56 @@ class CrossValidator:
         })
 
     def saveResults(self): 
-        """ Save the cross-validation results to CSV files. """
         
         if self.model is None: 
             print("No model has been set for cross-validation.") 
             return 
+
         try:
-            # --- Save detailed classification reports ---
-            if self.reports:
-                last_report_df = self.reports[-1]
-                try:
-                    reports_file = f'classification_reports({self.model.model.__class__.__name__}).csv'
-                except:
-                    reports_file = f'classification_reports({self.model.__class__.__name__}).csv'
-                if os.path.exists(reports_file):
-                    existing_df = pd.read_csv(reports_file)
-                    all_reports_df = pd.concat([existing_df, last_report_df], ignore_index=True)
-                else:
-                    all_reports_df = last_report_df
+            if not self.reports:
+                print("No reports to save.")
+                return
 
-                all_reports_df.to_csv(reports_file, index=False)
+            # --- Get the latest classification report ---
+            last_report_df = self.reports[-1]
 
-            print(f"✅ Results saved/appended for model {self.model.__class__.__name__}.")
+            # --- Flatten the report ---
+            def flatten_report(report_df):
+                flat = {}
+                for idx, row in report_df.iterrows():
+                    for metric in report_df.columns:
+                        key = f"{metric}_{idx.replace(' ', '_')}"
+                        flat[key] = row[metric]
+                return flat
+
+            flat_metrics = flatten_report(last_report_df)
+
+            # --- Get full model name with params ---
+            try:
+                model_name = str(self.model.model)
+            except AttributeError:
+                model_name = str(self.model)
+
+            # --- Create single-row DataFrame ---
+            record = {"Model": model_name}
+            record.update(flat_metrics)
+
+            flat_df = pd.DataFrame([record])
+
+            # --- Save or append to file ---
+            reports_file = "classification_reports.csv"
+            if os.path.exists(reports_file):
+                existing_df = pd.read_csv(reports_file)
+                all_reports_df = pd.concat([existing_df, flat_df], ignore_index=True)
+            else:
+                all_reports_df = flat_df
+
+            all_reports_df.to_csv(reports_file, index=False)
+
+            print(f"✅ Flattened results saved/appended for model {self.model.__class__.__name__}.")
 
         except Exception as e:
-            print(f"Error saving cross-validation results: {e}")
+            print(f"❌ Error saving cross-validation results: {e}")
 
     def reset(self):
         """

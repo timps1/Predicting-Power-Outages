@@ -12,7 +12,7 @@ import pandas as pd
 from xgboost import XGBClassifier
 from CrossValidationMethod import MethodOfCrossValidation
 from GridSearchMethod import MethodUsingGridSearchCV
-from EnsembleApproach import trainingEnsemble, openAndPredict
+from EnsembleApproach import trainingEnsemble, openAndPredict, fitAndSave
 from BaseLearnersTraining import trainBaseLearners, buildAndSaveBaseLearners
 from Data_Preprocessing import SUS
 import InputLineManagement as ilm
@@ -34,10 +34,6 @@ def main():
     
     # Split data into features and target
     targetLabel = 'outage_flag'  # Assuming 'outage' is the target column
-    if targetLabel not in data.columns:
-        print(f"Column '{targetLabel}' does not exist in the dataset.")
-        print("Available columns:", data.columns)
-        sys.exit(1)
     
     for columnName in data.columns:
         if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName:
@@ -66,11 +62,30 @@ def main():
 
     # trainBaseLearners(X, y)
 
-    buildAndSaveBaseLearners(X, y)
+    # buildAndSaveBaseLearners(X, y)
 
-    # trainingEnsemble(X, y)
+    if ilm.getArg("ENSEMBLE-INPUT") is not None:
+        data = pd.read_csv(ilm.getArg("ENSEMBLE-INPUT"))
+        X = data
+        for columnName in data.columns:
+            if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName:
+                data = data.drop(columns=columnName)
+        y = data[targetLabel]
+        X = data.drop(columns=[targetLabel]) 
+    
+        trainingEnsemble(X, y)
 
-    # openAndPredict(X, y)
+        fitAndSave(X, y)
+
+    if ilm.getArg("TEST-SET") is not None:
+        data = pd.read_csv(ilm.getArg("TEST-SET"))
+        X = data
+        for columnName in data.columns:
+            if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName:
+                data = data.drop(columns=columnName)
+        y = data[targetLabel]
+        X = data.drop(columns=[targetLabel]) 
+        openAndPredict(X, y)
     
 
 

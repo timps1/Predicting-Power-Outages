@@ -52,7 +52,8 @@ def buildAndSaveBaseLearners(X, y):
     et_params = {
         "n_estimators" : 80, 
         "criterion" : 'entropy', 
-        "max_features" : 80
+        "max_features" : 80,
+        "random_state" : 42
     }
 
     modelClassParameterList = [
@@ -86,12 +87,20 @@ def buildAndSaveBaseLearners(X, y):
         
         fileInfo += f'{model_filename},{tag}\n'
 
-        print(f"------------------------------------------------------------")
+    print(f"------------------------------------------------------------")
     
     if ilm.getArg("MODELS-FILENAME-WRITE") is not None and len(fileInfo) > 0:
-        aFile = open(ilm.getArg("MODELS-FILENAME-WRITE"), "w")
-        aFile.write(fileInfo)
-        aFile.close()
+        filename = ilm.getArg("MODELS-FILENAME-WRITE")
+        try:
+            with open(filename, "r") as f:
+                existing_content = f.read()
+        except FileNotFoundError:
+            existing_content = ""  # File does not exist yet
+
+        # Only write if fileInfo is not already present
+        if fileInfo not in existing_content:
+            with open(filename, "a") as f:
+                f.write(fileInfo)
 
     
 def trainBaseLearners(X, y):
@@ -128,14 +137,20 @@ def trainBaseLearners(X, y):
     et_params = {
         "n_estimators" : 80, 
         "criterion" : 'entropy', 
-        "max_features" : 80
+        "max_features" : 80,
+        "random_state" : 42
+    }
+
+    svc_params = {
+        "kernel" : "rbf",
+        "C" : 20
     }
 
     modelClassParameterList = [
         # (RandomForestClassifier(**rf_params), "rf"), 
         # (KNeighborsClassifier(**knn_params), "knn"),
         # (XGBClassifier(**xgb_params), "xgb"),
-        # (SVM(**svm_params), "svm"),
+        # (SVC(**svc_params), "svc"),
         (ExtraTreesClassifier(**et_params), "et"),
         ]
     

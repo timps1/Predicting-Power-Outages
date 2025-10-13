@@ -3,7 +3,7 @@ from collections import Counter
 import sys
 import InputLineManagement as ilm
 
-GLOBAL_VERB = ilm.getArg("VERBOSE")
+GLOBAL_VERB = 0
 
 def apply_smote(x, y):
     """
@@ -14,15 +14,22 @@ def apply_smote(x, y):
         x: SMOTE data column
         y: SMOTE flag column
     """
-    if GLOBAL_VERB == 1: print("Distribution before SMOTE:", Counter(y))
+    global GLOBAL_VERB
+    GLOBAL_VERB = int(ilm.getArg("VERBOSE"))
+
+    if GLOBAL_VERB >= 1: print("Distribution before SMOTE:", Counter(y))
     if is_float(ilm.getArg("SMOTE-SAMP-STRAT")):
-        smote = SMOTE(sampling_strategy=float(ilm.getArg("SMOTE-SAMP-STRAT")), random_state=42)
+        smote = SMOTE(k_neighbors=int(ilm.getArg("SMOTE-KNN")), sampling_strategy=float(ilm.getArg("SMOTE-SAMP-STRAT")), random_state=42)
     elif ilm.getArg("SMOTE-SAMP-STRAT") != "pass":
-        smote = SMOTE(sampling_strategy=ilm.getArg("SMOTE-SAMP-STRAT"), random_state=42)
+        smote = SMOTE(k_neighbors=int(ilm.getArg("SMOTE-KNN")), sampling_strategy=ilm.getArg("SMOTE-SAMP-STRAT"), random_state=42)
     else:
+        print("Did not apply SMOTE")
         return x,y
-    x,y = smote.fit_resample(x,y)
-    if GLOBAL_VERB == 1: print("Distribution after SMOTE:", Counter(y))
+    try:
+        x,y = smote.fit_resample(x,y)
+    except:
+        print("SMOTE passed on")
+    if GLOBAL_VERB >= 1: print("Distribution after SMOTE:", Counter(y))
     return x,y
 
 def is_float(value):

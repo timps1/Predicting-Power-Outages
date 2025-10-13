@@ -14,113 +14,98 @@ import pandas as pd
 from xgboost import XGBClassifier
 from Models.SVMtorch import SVM
 import joblib
+import time
 from CrossValidationMethod import MethodOfCrossValidation
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import InputLineManagement as ilm
+from Data_Preprocessing.SUS import applySUS
+from Data_Preprocessing.smote_method import apply_smote 
+from sklearn.ensemble import ExtraTreesClassifier
 
+
+GLOBAL_RF_PRAMAS = {
+        "n_estimators": 100,
+        "random_state": 42,
+        "n_jobs": -1
+    }
+
+GLOBAL_ET_PRAMAS = {
+    "n_estimators": 80,
+    "criterion" : 'entropy', 
+    "max_features" : 120,
+    "random_state": 42,
+    "n_jobs": -1
+}
+
+GLOBAL_XGB_PRAMAS = {
+    "n_estimators": 100,
+    "random_state": 42,
+    "n_jobs": -1
+}
+
+GLOBAL_META_TAG = "et"
 
 def trainingEnsemble(X, y):
 
-    finalEstimatorTag = "rf"
+    finalEstimatorTag = "et"
     passthrough = True
 
-    rf_meta_params = {
-        "n_estimators": 100,
-        "random_state": 42,
-        "n_jobs": -1
-    }
+    global GLOBAL_ET_PRAMAS
+    global GLOBAL_RF_PRAMAS
+    global GLOBAL_XGB_PRAMAS
 
-    xgboost_meta_params = {
-        "n_estimators": 100,
-        "random_state": 42,
-        "n_jobs": -1
-    }
-
-    inputModelsFile = ilm.getArg("MODELS-FILENAME-READ", "r")
+    inputModelsFile = open(ilm.getArg("MODELS-FILENAME-READ"), "r")
     modelsWithTags = inputModelsFile.read().strip().split("\n")
     inputModelsFile.close()
 
     modelFilenamesAndTags = [tuple(modelAndTag.strip().split(",")) for modelAndTag in modelsWithTags]
 
-    loadedModels = []
+    X = loadBaseLearnersModel(X)
 
-    for i, (modelFilename, tag) in enumerate(modelFilenamesAndTags):
-        if tag == "svm":
-            model = SVM()
-            model.load(modelFilename)
-        else: 
-            model = joblib.load(modelFilename)
-        loadedModels.append(model)
-        print(f"Model {tag} loaded!")
+    meta_models = [(ExtraTreesClassifier(**GLOBAL_ET_PRAMAS), "et"), 
+                   (RandomForestClassifier(**GLOBAL_RF_PRAMAS), "rf")
+                   ]
+
+    MethodOfCrossValidation(X, y, meta_models)
+
     
 
-    predictionsList = []
-    for i, model in enumerate(loadedModels):
-        predictionsList.append(model.predict_proba(X)[:, 1])
-    
-    prediction_cols = [
-        pd.Series(preds, name=f"{modelFilenamesAndTags[i][1]} prediction")
-        for i, preds in enumerate(predictionsList)
-    ]
+def fitAndSave(X, y):  
+    global GLOBAL_META_TAG
+    GLOBAL_META_TAG = "et"
+    global GLOBAL_ET_PRAMAS
+    global GLOBAL_RF_PRAMAS
+    global GLOBAL_XGB_PRAMAS
 
-    if passthrough:
-        X = pd.concat([X] + prediction_cols, axis=1)
-    else:
-        X = pd.concat(prediction_cols, axis=1)
+    X = loadBaseLearnersModel(X)
 
-    meta_model = RandomForestClassifier(**rf_meta_params)
+    meta_model = RandomForestClassifier(**GLOBAL_ET_PRAMAS)
 
-    MethodOfCrossValidation(X, y, [(meta_model, finalEstimatorTag)])
+    X, y = applySUS(X, y)
+    X, y = apply_smote(X, y)
 
-    fitAndSave(X, y, meta_model, finalEstimatorTag)
-    
-
-def fitAndSave(X, y, meta_model, finalEstimatorTag):    
     meta_model.fit(X, y)
 
-    model_filename = f"Trained_Models/{finalEstimatorTag}_ensemble_model.joblib"
+    model_filename = f"Trained_Models/{GLOBAL_META_TAG}_ensemble_model.joblib"
     joblib.dump(meta_model, model_filename)
     print("Model saved!", model_filename)
 
 def openAndPredict(X, y, filename = None):
 
+    global GLOBAL_META_TAG
+
     passthrough = True
 
-    modelFilenamesAndTags = [
-        ("Trained_Models/rf_model.joblib", "rf"),
-        ("Trained_Models/svm_model.pth", "svm"),
-        ("Trained_Models/xgb_model.joblib", "xgb"),
-        ("Trained_Models/knn_model.joblib", "knn")
-    ]
+    inputModelsFile = open(ilm.getArg("MODELS-FILENAME-READ"), "r")
+    modelsWithTags = inputModelsFile.read().strip().split("\n")
+    inputModelsFile.close()
 
-    loadedModels = []
+    modelFilenamesAndTags = [tuple(modelAndTag.strip().split(",")) for modelAndTag in modelsWithTags]
 
-    for i, (modelFilename, tag) in enumerate(modelFilenamesAndTags):
-        if tag == "svm":
-            model = SVM()
-            model.load(modelFilename)
-        else: 
-            model = joblib.load(modelFilename)
-        loadedModels.append(model)
-        print(f"Model {tag} loaded!")
-    
-
-    predictionsList = []
-    for i, model in enumerate(loadedModels):
-        predictionsList.append(model.predict_proba(X)[:, 1])
-    
-    prediction_cols = [
-        pd.Series(preds, name=f"{modelFilenamesAndTags[i][1]} prediction")
-        for i, preds in enumerate(predictionsList)
-    ]
-
-    if passthrough:
-        X = pd.concat([X] + prediction_cols, axis=1)
-    else:
-        X = pd.concat(prediction_cols, axis=1)
+    X = loadBaseLearnersModel(X)
     
     if filename is None:
-        filename = "Trained_Models/rf_ensemble_model.joblib"
+        filename = f"Trained_Models/{GLOBAL_META_TAG}_ensemble_model.joblib"
 
     model = joblib.load(filename)
 
@@ -132,3 +117,37 @@ def openAndPredict(X, y, filename = None):
     print("Confusion Matrix:")
     print(confusion_matrix(y, y_pred))
 
+def loadBaseLearnersModel(X):
+    passthrough = True
+    inputModelsFile = open(ilm.getArg("MODELS-FILENAME-READ"), "r")
+    modelsWithTags = inputModelsFile.read().strip().split("\n")
+    inputModelsFile.close()
+
+    modelFilenamesAndTags = [tuple(modelAndTag.strip().split(",")) for modelAndTag in modelsWithTags]
+
+    predictionsList = []
+    start = time.time()
+
+    for i, (modelFilename, tag) in enumerate(modelFilenamesAndTags):
+        if tag == "svm":
+            model = SVM()
+            model.load(modelFilename)
+        else: 
+            model = joblib.load(modelFilename)
+        
+        if int(ilm.getArg("VERBOSE")) >= 1: print(f"\rProgress: {100 * i/len(modelFilenamesAndTags):.2f}% - {i} | ETA {(time.time() - start)/(i+1)*(len(modelFilenamesAndTags) - i):.2f}s | {tag}", end="", flush=True)
+        
+        predictionsList.append(model.predict_proba(X)[:, 1])
+    
+    print()
+    prediction_cols = [
+        pd.Series(preds, name=f"{modelFilenamesAndTags[i][1]} prediction")
+        for i, preds in enumerate(predictionsList)
+    ]
+
+    if passthrough:
+        X = pd.concat([X] + prediction_cols, axis=1)
+    else:
+        X = pd.concat(prediction_cols, axis=1)
+
+    return X
