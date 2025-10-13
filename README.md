@@ -5,7 +5,9 @@ The aim of this project is to create models, and tie them together in an ensembl
 
 
 ## How does it work?
-The main script is...
+# The main script is MainPowerOutagePrediction.py, which requires three different sets, the US data
+
+
 What does our code do?
 First, we have preprocessed our weather data, normalising it, and making sure everything is in a consistent format. After this, we paired it with our outage dataset to generate entries that detail the weather for a given time, and a binary flag for whether or not a power outage occured on that day. With this, we can begin our training. We trained the following models:
 - K-NN
