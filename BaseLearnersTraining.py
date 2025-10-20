@@ -1,5 +1,4 @@
 import sys
-from Models.SklearnModels import sklearnModel
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC

@@ -1,5 +1,4 @@
 import sys
-from Models.SklearnModels import sklearnModel
 from IO_Data import IOData
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -54,13 +53,6 @@ def main():
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
 
-    # MethodUsingGridSearchCV(X, y)
-
-    # modelsList = MethodOfCrossValidation(X, y)
-
-    # MethodUsingGridSearchCV(X, y)
-
-    # trainBaseLearners(X, y)
 
     # buildAndSaveBaseLearners(X, y)
 
@@ -72,8 +64,6 @@ def main():
                 data = data.drop(columns=columnName)
         y = data[targetLabel]
         X = data.drop(columns=[targetLabel]) 
-    
-        trainingEnsemble(X, y)
 
         fitAndSave(X, y)
 
