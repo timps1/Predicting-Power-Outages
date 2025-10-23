@@ -1,13 +1,4 @@
-import sys
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn import metrics
-from sklearn.model_selection import StratifiedKFold
-from sklearn.linear_model import LogisticRegression
 import pandas as pd
-from Models.SVMtorch import SVM
-import xgboost
 from xgboost import XGBClassifier
 import time
 from sklearn.metrics import classification_report
@@ -16,7 +7,6 @@ from sklearn.model_selection import KFold
 import os
 from Data_Preprocessing.SUS import applySUS
 from Data_Preprocessing.smote_method import apply_smote
-import InputLineManagement as ilm
 
 
 
@@ -69,7 +59,7 @@ class CrossValidator:
         self.scores = []   # overall scores
         self.reports = []  # detailed classification reports
         self.storeResults = storeResults
-        self.remakeFolds = int(ilm.getArg("RM-FOLDS"))==1 #Saved folds can be rerun
+        self.remakeFolds = True #Saved folds can be rerun
 
     def setModel(self, model):
         """
@@ -85,7 +75,6 @@ class CrossValidator:
         if self.model is None:
             raise ValueError("Model must be set before cross-validation.")
         
-        
         foldNumber = 1
         folds_list = []
         scores_list = []
@@ -98,22 +87,8 @@ class CrossValidator:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
 
-            if self.remakeFolds:
-                X_train, y_train = applySUS(X_train, y_train)
-                X_train, y_train = apply_smote(X_train, y_train)
-                saveFoldDF = pd.concat([pd.DataFrame(X_train, columns=columnNames),
-                                        pd.Series(y_train, name="outage_flag")], 
-                                        axis=1)
-                if ilm.getArg("SAVE-RM-FOLDS") == 1:
-                    saveFoldDF.to_csv(foldFileDir+f"fold{foldNumber}.csv", index=False)
-                    print(f"Saved fold csv: {foldFileDir}fold{foldNumber}.csv")
-            
-            else:
-                saveFoldDF = pd.read_csv(foldFileDir+f"fold{foldNumber}.csv")
-                X_train =  saveFoldDF.drop(columns="outage_flag")
-                y_train = saveFoldDF["outage_flag"]
-                X_train = X_train.values
-                y_train = y_train.values
+            X_train, y_train = applySUS(X_train, y_train, 0.2)
+            X_train, y_train = apply_smote(X_train, y_train, 1)
 
             # train and predict
             self.model.fit(X_train, y_train)
@@ -128,7 +103,7 @@ class CrossValidator:
             report_dict = classification_report(y_test, y_pred, output_dict=True)
             report_df = pd.DataFrame(report_dict).transpose()
             report_df["Fold"] = foldNumber
-            report_df["Model"] = self.model.getModelInfo()
+            report_df["Model"] = self.model.__class__.__name__ + str(self.model.get_params())
             reports_list.append(report_df)
             
             print(f"Finished fold {foldNumber} in {round(time.time() - startTime, 1)}s\n")

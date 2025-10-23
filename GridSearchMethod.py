@@ -1,14 +1,10 @@
-import sys
-from IO_Data import IOData
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
 from sklearn import metrics
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 import pandas as pd
 from xgboost import XGBClassifier
-from Models.SVMtorch import SVM
 from sklearn.ensemble import ExtraTreesClassifier
 
 def MethodUsingGridSearchCV(X, y):
@@ -24,10 +20,8 @@ def MethodUsingGridSearchCV(X, y):
     }
     
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    
-    cv_inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    modelClassParameterList = [ExtraTreesClassifier()]
+    modelClassParameterList = [ExtraTreesClassifier(), KNeighborsClassifier(), RandomForestClassifier(), XGBClassifier()]
     
     parameter_grid_list = [
         {
@@ -35,6 +29,22 @@ def MethodUsingGridSearchCV(X, y):
             "criterion" : ['entropy'], 
             "max_features" : [50, 60, 70, 80]
         },
+        {
+            "n_neighbors": [3,4,5,6],
+            "weights": ["uniform", "distance"],
+            "metric": ["minkowski", "manhattan"]
+        },
+        {
+            "n_estimators": [100, 150, 200],
+            "max_depth": [None, 10, 20],
+            "min_samples_split": [2, 5, 10]
+        },
+        {
+            "learning_rate": [0.1, 0.2, 0.3],
+            "max_depth": [4, 6, 8],
+            "n_estimators": [100, 150, 200],
+            "subsample": [0.8, 1]
+        }
     ]
     
     for i, model in enumerate(modelClassParameterList):

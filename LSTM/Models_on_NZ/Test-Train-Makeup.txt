@@ -1,0 +1,66 @@
+$ python3 Data_Preprocessing/TestTrainingSplit.py ../CHCNZ_Training_Data_normalised.csv
+Starting dataset split (balanced positive case handling)...
+--------------------------------------------------------------------
+Total samples: 4028
+Positive samples: 23
+Negative samples: 4005
+Training set size: 2014
+Testing set size: 2014
+Training set target distribution:
+ outage_flag
+0    2002
+1      12
+Name: count, dtype: int64
+Testing set target distribution:
+ outage_flag
+0    2003
+1      11
+Name: count, dtype: int64
+Data split completed successfully.
+Training set saved to 'train.csv'.
+Testing set saved to 'test.csv'.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$ python3 Data_Preprocessing/TestTrainingSplit.py ../AKL_Training_Data_normalised.csv
+Starting dataset split (balanced positive case handling)...
+--------------------------------------------------------------------
+Total samples: 5302
+Positive samples: 21
+Negative samples: 5281
+Training set size: 2651
+Testing set size: 2651
+Training set target distribution:
+ outage_flag
+0    2640
+1      11
+Name: count, dtype: int64
+Testing set target distribution:
+ outage_flag
+0    2641
+1      10
+Name: count, dtype: int64
+Data split completed successfully.
+Training set saved to 'train.csv'.
+Testing set saved to 'test.csv'.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$ python3 Data_Preprocessing/TestTrainingSplit.py ../WLGNZ_Training_Data_normalised.csv
+Starting dataset split (balanced positive case handling)...
+--------------------------------------------------------------------
+Total samples: 4029
+Positive samples: 33
+Negative samples: 3996
+Training set size: 2015
+Testing set size: 2014
+Training set target distribution:
+ outage_flag
+0    1998
+1      17
+Name: count, dtype: int64
+Testing set target distribution:
+ outage_flag
+0    1998
+1      16
+Name: count, dtype: int64
+Data split completed successfully.
+Training set saved to 'train.csv'.
+Testing set saved to 'test.csv'.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

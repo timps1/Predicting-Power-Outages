@@ -1,32 +1,12 @@
-import sys
-from IO_Data import IOData
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from Model_Evaluation import CrossValidation
-from sklearn import metrics
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import StratifiedKFold
-from sklearn.linear_model import LogisticRegression
-# from Models.LSTMModelFile import LSTMEstimator
 import pandas as pd
 from xgboost import XGBClassifier
-from Models.SVMtorch import SVM
 import joblib
 import time
 from CrossValidationMethod import MethodOfCrossValidation
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-import InputLineManagement as ilm
 from Data_Preprocessing.SUS import applySUS
 from Data_Preprocessing.smote_method import apply_smote 
 from sklearn.ensemble import ExtraTreesClassifier
-
-
-GLOBAL_RF_PRAMAS = {
-        "n_estimators": 100,
-        "random_state": 42,
-        "n_jobs": -1
-    }
 
 GLOBAL_ET_PRAMAS = {
     "n_estimators": 80,
@@ -36,34 +16,15 @@ GLOBAL_ET_PRAMAS = {
     "n_jobs": -1
 }
 
-GLOBAL_XGB_PRAMAS = {
-    "n_estimators": 100,
-    "random_state": 42,
-    "n_jobs": -1
-}
-
 GLOBAL_META_TAG = "et"
 
 def trainingEnsemble(X, y):
 
-    finalEstimatorTag = "et"
-    passthrough = True
-
     global GLOBAL_ET_PRAMAS
-    global GLOBAL_RF_PRAMAS
-    global GLOBAL_XGB_PRAMAS
-
-    inputModelsFile = open(ilm.getArg("MODELS-FILENAME-READ"), "r")
-    modelsWithTags = inputModelsFile.read().strip().split("\n")
-    inputModelsFile.close()
-
-    modelFilenamesAndTags = [tuple(modelAndTag.strip().split(",")) for modelAndTag in modelsWithTags]
 
     X = loadBaseLearnersModel(X)
 
-    meta_models = [(ExtraTreesClassifier(**GLOBAL_ET_PRAMAS), "et"), 
-                   (RandomForestClassifier(**GLOBAL_RF_PRAMAS), "rf")
-                   ]
+    meta_models = [(ExtraTreesClassifier(**GLOBAL_ET_PRAMAS), "et")]
 
     MethodOfCrossValidation(X, y, meta_models)
 
@@ -71,21 +32,18 @@ def trainingEnsemble(X, y):
 
 def fitAndSave(X, y):  
     global GLOBAL_META_TAG
-    GLOBAL_META_TAG = "et"
     global GLOBAL_ET_PRAMAS
-    global GLOBAL_RF_PRAMAS
-    global GLOBAL_XGB_PRAMAS
 
     X = loadBaseLearnersModel(X)
 
-    meta_model = RandomForestClassifier(**GLOBAL_ET_PRAMAS)
+    meta_model = ExtraTreesClassifier(**GLOBAL_ET_PRAMAS)
 
-    X, y = applySUS(X, y)
-    X, y = apply_smote(X, y)
+    X, y = applySUS(X, y, 0.2)
+    X, y = apply_smote(X, y, 1)
 
     meta_model.fit(X, y)
 
-    model_filename = f"Trained_Models/{GLOBAL_META_TAG}_ensemble_model.joblib"
+    model_filename = f"Trained_Models/{GLOBAL_META_TAG}_Final_Ensemble_Model.joblib"
     joblib.dump(meta_model, model_filename)
     print("Model saved!", model_filename)
 
@@ -93,18 +51,9 @@ def openAndPredict(X, y, filename = None):
 
     global GLOBAL_META_TAG
 
-    passthrough = True
-
-    inputModelsFile = open(ilm.getArg("MODELS-FILENAME-READ"), "r")
-    modelsWithTags = inputModelsFile.read().strip().split("\n")
-    inputModelsFile.close()
-
-    modelFilenamesAndTags = [tuple(modelAndTag.strip().split(",")) for modelAndTag in modelsWithTags]
-
     X = loadBaseLearnersModel(X)
     
-    if filename is None:
-        filename = f"Trained_Models/{GLOBAL_META_TAG}_ensemble_model.joblib"
+    filename = f"Trained_Models/{GLOBAL_META_TAG}_Final_Ensemble_Model.joblib"
 
     model = joblib.load(filename)
 
@@ -118,7 +67,7 @@ def openAndPredict(X, y, filename = None):
 
 def loadBaseLearnersModel(X):
     passthrough = True
-    inputModelsFile = open(ilm.getArg("MODELS-FILENAME-READ"), "r")
+    inputModelsFile = open("Trained_Models/Final_Base_Learners_Models.txt", "r")
     modelsWithTags = inputModelsFile.read().strip().split("\n")
     inputModelsFile.close()
 
@@ -128,13 +77,9 @@ def loadBaseLearnersModel(X):
     start = time.time()
 
     for i, (modelFilename, tag) in enumerate(modelFilenamesAndTags):
-        if tag == "svm":
-            model = SVM()
-            model.load(modelFilename)
-        else: 
-            model = joblib.load(modelFilename)
+        model = joblib.load(modelFilename)
         
-        if int(ilm.getArg("VERBOSE")) >= 1: print(f"\rProgress: {100 * i/len(modelFilenamesAndTags):.2f}% - {i} | ETA {(time.time() - start)/(i+1)*(len(modelFilenamesAndTags) - i):.2f}s | {tag}", end="", flush=True)
+        print(f"\rProgress: {100 * i/len(modelFilenamesAndTags):.2f}% - {i} | {tag}", end="", flush=True)
         
         predictionsList.append(model.predict_proba(X)[:, 1])
     

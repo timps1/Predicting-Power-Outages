@@ -1,84 +1,47 @@
 import sys
-from IO_Data import IOData
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn import metrics
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import StratifiedKFold
-from sklearn.linear_model import LogisticRegression
 import pandas as pd
 from xgboost import XGBClassifier
 from CrossValidationMethod import MethodOfCrossValidation
 from GridSearchMethod import MethodUsingGridSearchCV
 from EnsembleApproach import trainingEnsemble, openAndPredict, fitAndSave
 from BaseLearnersTraining import trainBaseLearners, buildAndSaveBaseLearners
-from Data_Preprocessing import SUS
-import InputLineManagement as ilm
-import joblib
+import time 
 
 def main():
     """
     Main function to run the power outage prediction project.
     """
 
-    # Reading inputline
-    ilm.intialiseGLOBAL_DICTIONARY()
-
-    # Get input data
-    data = pd.read_csv(ilm.getArg("INPUT"))
-
-    if ilm.getArg("SECONDARY-INPUT") != 0:
-        data = pd.concat([data,pd.read_csv(ilm.getArg("SECONDARY-INPUT"))], axis=0)
+    if len(sys.argv) < 4:
+        print("Usage: python MainPowerOutagePrediction.py <base_learner_data.csv> <ensemble_training_data.csv> <test_data.csv>")
+        sys.exit(1)
     
-    # Split data into features and target
     targetLabel = 'outage_flag'  # Assuming 'outage' is the target column
     
+    X, y = loadAndSplitData(sys.argv[1], targetLabel)
+    buildAndSaveBaseLearners(X, y) 
+
+    X, y = loadAndSplitData(sys.argv[2], targetLabel)
+    fitAndSave(X, y)
+
+    X, y = loadAndSplitData(sys.argv[3], targetLabel)
+    openAndPredict(X, y)
+
+def loadAndSplitData(filename, targetLabel):
+    data = pd.read_csv(filename)
+    
     for columnName in data.columns:
-        if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName:
+        if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName or "hail" in columnName:
             data = data.drop(columns=columnName)
 
     X = data
     y = data[targetLabel]
-    # for col in data.columns:
-    #     if "hail" in col.lower(): #or "thunder" in col.lower():
-    #         data = data.drop(columns=[col])
     X = data.drop(columns=[targetLabel])  # features only
 
-    # X = pd.concat(X, y, axis=1)
-    # X.to_csv(f"{sys.argv[1][:sys.argv[1].rfind(".")]}_near_miss.csv")
-
-    # print("Data columns:", data.columns)
     if not check_for_non_numeric_values(X):
         print("Data contains non-numeric values. Please preprocess the data to convert all features to numeric types.")
         sys.exit(1)
-
-
-    # buildAndSaveBaseLearners(X, y)
-
-    if ilm.getArg("ENSEMBLE-INPUT") is not None:
-        data = pd.read_csv(ilm.getArg("ENSEMBLE-INPUT"))
-        X = data
-        for columnName in data.columns:
-            if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName:
-                data = data.drop(columns=columnName)
-        y = data[targetLabel]
-        X = data.drop(columns=[targetLabel]) 
-
-        fitAndSave(X, y)
-
-    if ilm.getArg("TEST-SET") is not None:
-        data = pd.read_csv(ilm.getArg("TEST-SET"))
-        X = data
-        for columnName in data.columns:
-            if "date" in columnName or "Time_" in columnName or "Unnamed" in columnName:
-                data = data.drop(columns=columnName)
-        y = data[targetLabel]
-        X = data.drop(columns=[targetLabel]) 
-        openAndPredict(X, y)
-    
-
-
+    return X, y
 
 def check_for_non_numeric_values(df):
     """
@@ -103,6 +66,7 @@ def check_for_non_numeric_values(df):
 if __name__ == "__main__":
     print("Starting power outage prediction project...")
     print("--------------------------------------------------------------------")
+    strartTime = time.time()
     main()
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    print("Power outage prediction project completed successfully.")
+    print(f"Power outage prediction project completed successfully. Runtime: {round(time.time() - strartTime, 2)} seconds.")
